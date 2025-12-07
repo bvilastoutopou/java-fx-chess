@@ -3,6 +3,8 @@ package com.example.chess;
 import javafx.fxml.FXML;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.text.Text;
+
 import java.io.FileNotFoundException;
 
 public class ChessController {
@@ -13,6 +15,8 @@ public class ChessController {
     private SquarePair selectedSquare = null;
     private Pane[][] squares = new Pane[SIZE][SIZE];
     private boolean whitePlays = true;
+    @FXML
+    private Text playingText;
     public ChessController() throws FileNotFoundException {
     }
 
@@ -23,6 +27,17 @@ public class ChessController {
             loadPieces();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
+        }
+
+    }
+
+    @FXML
+    public void changeTurn(){
+        if(whitePlays){
+            playingText.setText("White Plays");
+        }
+        else{
+            playingText.setText("Black Plays");
         }
     }
 
@@ -108,6 +123,7 @@ public class ChessController {
 
                 if(chessBoard.getPiece(selectedSquare).move(chessBoard,pair,squares)){
                     whitePlays = !whitePlays;
+                    changeTurn();
                 }
                 selectedSquare = null;
                 return;

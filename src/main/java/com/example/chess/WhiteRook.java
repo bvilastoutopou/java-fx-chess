@@ -6,10 +6,9 @@ import javafx.scene.image.ImageView;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-public class WhiteRook extends Piece {
+public class WhiteRook extends Rook {
     public WhiteRook(SquarePair pos) throws FileNotFoundException {
         super(pos);
-        pieceType = "Rook";
         setColor("white");
         inputStream = new FileInputStream("C:\\Users\\capta\\Desktop\\all\\programs\\java\\java fx\\Ergasia\\Chess\\src\\main\\resources\\com\\example\\chess\\pieces\\white-rook.png");
         img = new Image(inputStream);
@@ -18,64 +17,4 @@ public class WhiteRook extends Piece {
         imageView.setFitWidth(60);
     }
 
-
-
-    @Override
-    public void findLegalMoves(ChessBoard chessBoard){
-        legalMoves.clear();
-        int row = pos.getRow();
-        int col = pos.getCol();
-
-        for(int i=row+1;i<8;i++){
-            SquarePair pair = new SquarePair(i,col);
-            Piece pieceAtPos = chessBoard.getPiece(pair);
-            if(pieceAtPos==null) legalMoves.add(pair);
-            else if(pieceAtPos.getColor().equals("white")){
-                break;
-            }
-            else if(pieceAtPos.getColor().equals("black")){
-                legalMoves.add(pair);
-                break;
-            }
-        }
-
-        for(int i=row-1;i>=0;i--){
-            SquarePair pair = new SquarePair(i,col);
-            Piece pieceAtPos = chessBoard.getPiece(pair);
-            if(pieceAtPos==null) legalMoves.add(pair);
-            else if(pieceAtPos.getColor().equals("white")){
-                break;
-            }
-            else if(pieceAtPos.getColor().equals("black")){
-                legalMoves.add(pair);
-                break;
-            }
-        }
-
-        for(int i=col+1;i<8;i++){
-            SquarePair pair = new SquarePair(row,i);
-            Piece pieceAtPos = chessBoard.getPiece(pair);
-            if(pieceAtPos==null) legalMoves.add(pair);
-            else if(pieceAtPos.getColor().equals("white")){
-                break;
-            }
-            else if(pieceAtPos.getColor().equals("black")){
-                legalMoves.add(pair);
-                break;
-            }
-        }
-
-        for(int i=col-1;i>=0;i--){
-            SquarePair pair = new SquarePair(row,i);
-            Piece pieceAtPos = chessBoard.getPiece(pair);
-            if(pieceAtPos==null) legalMoves.add(pair);
-            else if(pieceAtPos.getColor().equals("white")){
-                break;
-            }
-            else if(pieceAtPos.getColor().equals("black")){
-                legalMoves.add(pair);
-                break;
-            }
-        }
-    }
 }

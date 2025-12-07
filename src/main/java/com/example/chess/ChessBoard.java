@@ -36,6 +36,28 @@ public class ChessBoard {
         SquarePair blackRookRightPos = new SquarePair(0,7);
         BlackRook blackRookRight = new BlackRook(blackRookRightPos);
         setPiece(blackRookRight,blackRookRightPos);
+
+        SquarePair whiteBishopLeftPos = new SquarePair(7,2);
+        WhiteBishop whiteBishopLeft = new WhiteBishop(whiteBishopLeftPos);
+        setPiece(whiteBishopLeft,whiteBishopLeftPos);
+        SquarePair whiteBishopRightPos = new SquarePair(7,5);
+        WhiteBishop whiteBishopRight = new WhiteBishop(whiteBishopRightPos);
+        setPiece(whiteBishopRight,whiteBishopRightPos);
+
+        SquarePair blackBishopLeftPos = new SquarePair(0,2);
+        BlackBishop blackBishopLeft = new BlackBishop(blackBishopLeftPos);
+        setPiece(blackBishopLeft,blackBishopLeftPos);
+        SquarePair blackBishopRightPos = new SquarePair(0,5);
+        BlackBishop blackBishopRight = new BlackBishop(blackBishopRightPos);
+        setPiece(blackBishopRight,blackBishopRightPos);
+
+        SquarePair whiteQueenPos = new SquarePair(7,3);
+        WhiteQueen whiteQueen = new WhiteQueen(whiteQueenPos);
+        setPiece(whiteQueen,whiteQueenPos);
+
+        SquarePair blackQueenPos = new SquarePair(0,3);
+        BlackQueen blackQueen = new BlackQueen(blackQueenPos);
+        setPiece(blackQueen,blackQueenPos);
     }
 
 }
