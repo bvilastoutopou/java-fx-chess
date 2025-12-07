@@ -58,6 +58,20 @@ public class ChessBoard {
         SquarePair blackQueenPos = new SquarePair(0,3);
         BlackQueen blackQueen = new BlackQueen(blackQueenPos);
         setPiece(blackQueen,blackQueenPos);
+
+        SquarePair whiteKnightLeftPos = new SquarePair(7,1);
+        WhiteKnight whiteKnightLeft = new WhiteKnight(whiteKnightLeftPos);
+        setPiece(whiteKnightLeft,whiteKnightLeftPos);
+        SquarePair whiteKnightRightPos = new SquarePair(7,6);
+        WhiteKnight whiteKnightRight = new WhiteKnight(whiteKnightRightPos);
+        setPiece(whiteKnightRight,whiteKnightRightPos);
+
+        SquarePair blackKnightLeftPos = new SquarePair(0,1);
+        BlackKnight blackKnightLeft = new BlackKnight(blackKnightLeftPos);
+        setPiece(blackKnightLeft,blackKnightLeftPos);
+        SquarePair blackKnightRightPos = new SquarePair(0,6);
+        BlackKnight blackKnightRight = new BlackKnight(blackKnightRightPos);
+        setPiece(blackKnightRight,blackKnightRightPos);
     }
 
 }
