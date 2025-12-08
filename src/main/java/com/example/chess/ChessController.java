@@ -68,13 +68,13 @@ public class ChessController {
     @FXML
     private void addHover(Pane square,String color,SquarePair pair){
         square.setOnMouseEntered(event -> {
-            if(!pair.equals(selectedSquare) && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: green; -fx-border-width:2")  && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: red; -fx-border-width:2")) {
+            if(!pair.equals(selectedSquare) && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: green; -fx-border-width:2")  && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: red; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: purple; -fx-border-width:2")) {
                 square.setStyle("-fx-background-color: " + color + "; -fx-border-color: yellow; -fx-border-width:2");
             }
         });
 
         square.setOnMouseExited(event -> {
-            if(!pair.equals(selectedSquare) && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: green; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: red; -fx-border-width:2")) {
+            if(!pair.equals(selectedSquare) && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: green; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: red; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: purple; -fx-border-width:2")) {
                 square.setStyle("-fx-background-color: " + color + ";");
             }
         });
@@ -120,7 +120,9 @@ public class ChessController {
                 for(SquarePair squarePair : oldPiece.legalMoves){
                     changeBorderColor(null,squarePair);
                 }
-
+                for(SquarePair squarePair : oldPiece.specialMoves){
+                    changeBorderColor(null,squarePair);
+                }
                 if(chessBoard.getPiece(selectedSquare).move(chessBoard,pair,squares)){
                     whitePlays = !whitePlays;
                     changeTurn();
@@ -141,6 +143,10 @@ public class ChessController {
                             changeBorderColor("red", squarePair);
                         }
                     }
+                    for (SquarePair squarePair : selectedPiece.specialMoves){
+                        changeBorderColor("purple", squarePair);
+                    }
+
                 }
             }
             else{

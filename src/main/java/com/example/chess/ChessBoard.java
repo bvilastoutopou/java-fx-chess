@@ -1,13 +1,25 @@
 package com.example.chess;
 
+import javafx.scene.layout.Pane;
+
 import java.io.FileNotFoundException;
 
 public class ChessBoard {
     private final int SIZE = 8;
     private Piece[][] chessBoard = new Piece[SIZE][SIZE];
-
+    private SquarePair lastMove;
     public ChessBoard() throws FileNotFoundException {
+        lastMove = null;
         setChessBoard();
+    }
+
+
+    public SquarePair getLastMove() {
+        return lastMove;
+    }
+
+    public void setLastMove(SquarePair lastMove) {
+        this.lastMove = lastMove;
     }
 
     public void setPiece(Piece piece, SquarePair pair){
@@ -72,6 +84,18 @@ public class ChessBoard {
         SquarePair blackKnightRightPos = new SquarePair(0,6);
         BlackKnight blackKnightRight = new BlackKnight(blackKnightRightPos);
         setPiece(blackKnightRight,blackKnightRightPos);
+
+        for(int i=0;i<SIZE;i++){
+            SquarePair whitePawnPos = new SquarePair(6,i);
+            WhitePawn whitePawn = new WhitePawn(whitePawnPos);
+            setPiece(whitePawn,whitePawnPos);
+        }
+
+        for(int i=0;i<SIZE;i++){
+            SquarePair blackPawnPos = new SquarePair(1,i);
+            BlackPawn blackPawn = new BlackPawn(blackPawnPos);
+            setPiece(blackPawn,blackPawnPos);
+        }
     }
 
 }

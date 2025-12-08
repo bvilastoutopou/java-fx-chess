@@ -7,11 +7,12 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 
 abstract public class Piece {
-    private int movesDone;
+    protected int movesDone;
     protected SquarePair pos;
     private String color;
     protected String pieceType;
     protected ArrayList<SquarePair> legalMoves = new ArrayList<SquarePair>();
+    protected ArrayList<SquarePair> specialMoves = new ArrayList<SquarePair>();
     protected FileInputStream inputStream;
     protected Image img;
     protected ImageView imageView;
@@ -39,14 +40,26 @@ abstract public class Piece {
         return imageView;
     }
 
+
+
     abstract public void findLegalMoves(ChessBoard chessBoard);
 
     public boolean move(ChessBoard chessBoard, SquarePair destinationSquare, Pane[][] squares){
         boolean found = false;
+        boolean isSpecial = false;
         for(SquarePair pair : legalMoves){
             if(pair.equals(destinationSquare)){
                 found = true;
                 break;
+            }
+        }
+        if(!found){
+            for(SquarePair pair : specialMoves){
+                if(pair.equals(destinationSquare)){
+                    found = true;
+                    isSpecial = true;
+                    break;
+                }
             }
         }
         if(found){
@@ -63,6 +76,13 @@ abstract public class Piece {
             chessBoard.setPiece(this, destinationSquare);
             pos = destinationSquare;
             movesDone++;
+            if(isSpecial){
+                if(oldRow==3 || oldRow==4){
+                    squares[oldRow][newCol].getChildren().clear();
+                    chessBoard.setPiece(null,new SquarePair(oldRow,newCol));
+                }
+            }
+            chessBoard.setLastMove(destinationSquare);
         }
         return found;
     }

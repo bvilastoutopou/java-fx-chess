@@ -1,5 +1,7 @@
 package com.example.chess;
 
+import javafx.scene.layout.Pane;
+
 public class Knight extends Piece{
 
     public Knight(SquarePair pos) {
