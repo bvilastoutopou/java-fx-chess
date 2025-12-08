@@ -81,7 +81,7 @@ public class ChessController {
     }
 
     @FXML
-    private void loadPieces() throws FileNotFoundException {
+    public void loadPieces() throws FileNotFoundException {
         for(int row=0;row<SIZE;row++){
             for(int col=0;col<SIZE;col++){
                 Piece piece = chessBoard.getPiece(new SquarePair(row,col));
@@ -123,9 +123,13 @@ public class ChessController {
                 for(SquarePair squarePair : oldPiece.specialMoves){
                     changeBorderColor(null,squarePair);
                 }
-                if(chessBoard.getPiece(selectedSquare).move(chessBoard,pair,squares)){
-                    whitePlays = !whitePlays;
-                    changeTurn();
+                try {
+                    if(chessBoard.getPiece(selectedSquare).move(chessBoard,pair,squares)){
+                        whitePlays = !whitePlays;
+                        changeTurn();
+                    }
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
                 }
                 selectedSquare = null;
                 return;
@@ -161,6 +165,9 @@ public class ChessController {
                         } else {
                             changeBorderColor("red", squarePair);
                         }
+                    }
+                    for (SquarePair squarePair : selectedPiece.specialMoves){
+                        changeBorderColor("purple", squarePair);
                     }
                 }
             }
