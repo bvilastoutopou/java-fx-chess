@@ -14,6 +14,8 @@ abstract public class Piece {
     protected String pieceType;
     protected ArrayList<SquarePair> legalMoves = new ArrayList<SquarePair>();
     protected ArrayList<SquarePair> specialMoves = new ArrayList<SquarePair>();
+    protected ArrayList<SquarePair> allowedMoves = new ArrayList<SquarePair>();
+    protected ArrayList<SquarePair> allowedSpecialMoves = new ArrayList<SquarePair>();
     protected FileInputStream inputStream;
     protected Image img;
     protected ImageView imageView;
@@ -46,13 +48,14 @@ abstract public class Piece {
     }
 
 
+    abstract public void findLegalMoves(ChessBoard chessBoard) throws FileNotFoundException;
 
-    abstract public void findLegalMoves(ChessBoard chessBoard);
+
 
     public boolean move(ChessBoard chessBoard, SquarePair destinationSquare, Pane[][] squares) throws FileNotFoundException {
         boolean found = false;
         boolean isSpecial = false;
-        for(SquarePair pair : legalMoves){
+        for(SquarePair pair : allowedMoves){
             if(pair.equals(destinationSquare)){
                 found = true;
                 break;
@@ -158,4 +161,44 @@ abstract public class Piece {
         }
         return found;
     }
+
+    public boolean simulateMove(ChessBoard chessBoard, SquarePair destinationSquare) throws FileNotFoundException {
+        SquarePair oldPos = new SquarePair(pos);
+        Piece oldPiece = chessBoard.getPiece(destinationSquare);
+
+        chessBoard.setPiece(null, oldPos);
+        chessBoard.setPiece(this, destinationSquare);
+        this.pos = destinationSquare;
+
+        SquarePair kingPos = chessBoard.findKing(getColor());
+        King king = (King)chessBoard.getPiece(kingPos);
+        boolean safe = !king.isChecked(chessBoard);
+
+        chessBoard.setPiece(this, oldPos);
+        chessBoard.setPiece(oldPiece, destinationSquare);
+        this.pos = oldPos;
+
+        return safe;
+    }
+
+    public void findAllowedMoves(ChessBoard chessBoard) throws FileNotFoundException {
+        findLegalMoves(chessBoard);
+        allowedMoves.clear();
+        allowedSpecialMoves.clear();
+        for(SquarePair pair: legalMoves){
+            simulateMove(chessBoard,pair);
+            boolean res = simulateMove(chessBoard,pair);
+            if(res){
+                allowedMoves.add(pair);
+            }
+        }
+        for(SquarePair pair: specialMoves){
+            simulateMove(chessBoard,pair);
+            boolean res = simulateMove(chessBoard,pair);
+            if(res){
+                allowedSpecialMoves.add(pair);
+            }
+        }
+    }
+
 }

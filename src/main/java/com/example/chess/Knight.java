@@ -2,6 +2,8 @@ package com.example.chess;
 
 import javafx.scene.layout.Pane;
 
+import java.io.FileNotFoundException;
+
 public class Knight extends Piece{
 
     public Knight(SquarePair pos) {
@@ -9,7 +11,6 @@ public class Knight extends Piece{
         pieceType = "knight";
     }
 
-    @Override
     public void findLegalMoves(ChessBoard chessBoard){
         legalMoves.clear();
         int row = pos.getRow();
@@ -70,4 +71,6 @@ public class Knight extends Piece{
             }
         }
     }
+
+
 }

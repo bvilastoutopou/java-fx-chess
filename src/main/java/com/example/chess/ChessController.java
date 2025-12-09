@@ -6,6 +6,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 
 public class ChessController {
     @FXML
@@ -68,13 +69,14 @@ public class ChessController {
     @FXML
     private void addHover(Pane square,String color,SquarePair pair){
         square.setOnMouseEntered(event -> {
-            if(!pair.equals(selectedSquare) && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: green; -fx-border-width:2")  && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: red; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: purple; -fx-border-width:2")) {
+
+            if(!pair.equals(selectedSquare) && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: green; -fx-border-width:2")  && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: red; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: purple; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: darkred; -fx-border-width:2")) {
                 square.setStyle("-fx-background-color: " + color + "; -fx-border-color: yellow; -fx-border-width:2");
             }
         });
 
         square.setOnMouseExited(event -> {
-            if(!pair.equals(selectedSquare) && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: green; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: red; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: purple; -fx-border-width:2")) {
+            if(!pair.equals(selectedSquare) && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: green; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: red; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: purple; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: darkred; -fx-border-width:2")) {
                 square.setStyle("-fx-background-color: " + color + ";");
             }
         });
@@ -113,33 +115,100 @@ public class ChessController {
     @FXML
     private void clickHandler(Pane square,SquarePair pair){
         square.setOnMouseClicked(event -> {
+            SquarePair whiteKingPos = chessBoard.findKing("white");
+            SquarePair blackKingPos = chessBoard.findKing("black");
+            WhiteKing whiteKing = (WhiteKing) chessBoard.getPiece(whiteKingPos);
+            BlackKing blackKing = (BlackKing) chessBoard.getPiece(blackKingPos);
+            try {
+                if(whiteKing.isChecked(chessBoard)){
+                    changeBorderColor("darkred",whiteKingPos);
+                }
+                else{
+                    changeBorderColor(null,whiteKingPos);
+                }
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                if(blackKing.isChecked(chessBoard)){
+                    changeBorderColor("darkred",blackKingPos);
+                }
+                else{
+                    changeBorderColor(null,blackKingPos);
+                }
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
             Piece selectedPiece = chessBoard.getPiece(pair);
             if(!pair.equals(selectedSquare) && selectedSquare!=null){
                 changeBorderColor(null,selectedSquare);
                 Piece oldPiece = chessBoard.getPiece(selectedSquare);
-                for(SquarePair squarePair : oldPiece.legalMoves){
+                for(SquarePair squarePair : new ArrayList<>(oldPiece.allowedMoves)){
                     changeBorderColor(null,squarePair);
                 }
-                for(SquarePair squarePair : oldPiece.specialMoves){
+                for(SquarePair squarePair :new ArrayList<>(oldPiece.specialMoves)){
                     changeBorderColor(null,squarePair);
+
                 }
                 try {
                     if(chessBoard.getPiece(selectedSquare).move(chessBoard,pair,squares)){
                         whitePlays = !whitePlays;
                         changeTurn();
+
+                        for(int row=0;row<SIZE;row++){
+                            for(int col=0;col<SIZE;col++){
+                                changeBorderColor(null,new SquarePair(row,col));
+                            }
+                        }
+                        if(whiteKing.isChecked(chessBoard)){
+                            changeBorderColor("darkred",whiteKingPos);
+                        }
+                        else{
+                            changeBorderColor(null,whiteKingPos);
+                        }
+                        if(blackKing.isChecked(chessBoard)){
+                            changeBorderColor("darkred",blackKingPos);
+                        }
+                        else{
+                            changeBorderColor(null,blackKingPos);
+                        }
                     }
                 } catch (FileNotFoundException e) {
                     throw new RuntimeException(e);
                 }
                 selectedSquare = null;
+                try {
+                    if(whiteKing.isChecked(chessBoard)){
+                        changeBorderColor("darkred",whiteKingPos);
+                    }
+                    else{
+                        changeBorderColor(null,whiteKingPos);
+                    }
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    if(blackKing.isChecked(chessBoard)){
+                        changeBorderColor("darkred",blackKingPos);
+                    }
+                    else{
+                        changeBorderColor(null,blackKingPos);
+                    }
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
                 return;
             }
             if(whitePlays) {
                 if (selectedPiece != null && !selectedPiece.getColor().equals("black")) {
                     selectedSquare = pair;
                     changeBorderColor("orange", selectedSquare);
-                    selectedPiece.findLegalMoves(chessBoard);
-                    for (SquarePair squarePair : selectedPiece.legalMoves) {
+                    try {
+                        selectedPiece.findAllowedMoves(chessBoard);
+                    } catch (FileNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                    for (SquarePair squarePair : selectedPiece.allowedMoves) {
                         Piece pieceAtPos = chessBoard.getPiece(squarePair);
                         if (pieceAtPos == null) {
                             changeBorderColor("green", squarePair);
@@ -147,18 +216,23 @@ public class ChessController {
                             changeBorderColor("red", squarePair);
                         }
                     }
-                    for (SquarePair squarePair : selectedPiece.specialMoves){
+                    for (SquarePair squarePair : selectedPiece.allowedSpecialMoves){
                         changeBorderColor("purple", squarePair);
                     }
 
                 }
+
             }
             else{
                 if (selectedPiece != null && !selectedPiece.getColor().equals("white")) {
                     selectedSquare = pair;
                     changeBorderColor("orange", selectedSquare);
-                    selectedPiece.findLegalMoves(chessBoard);
-                    for (SquarePair squarePair : selectedPiece.legalMoves) {
+                    try {
+                        selectedPiece.findAllowedMoves(chessBoard);
+                    } catch (FileNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                    for (SquarePair squarePair : selectedPiece.allowedMoves) {
                         Piece pieceAtPos = chessBoard.getPiece(squarePair);
                         if (pieceAtPos == null) {
                             changeBorderColor("green", squarePair);
@@ -166,7 +240,7 @@ public class ChessController {
                             changeBorderColor("red", squarePair);
                         }
                     }
-                    for (SquarePair squarePair : selectedPiece.specialMoves){
+                    for (SquarePair squarePair : selectedPiece.allowedSpecialMoves){
                         changeBorderColor("purple", squarePair);
                     }
                 }

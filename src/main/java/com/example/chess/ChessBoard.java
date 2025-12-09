@@ -14,6 +14,20 @@ public class ChessBoard {
     }
 
 
+    public SquarePair findKing(String color){
+        for(int row=0;row<SIZE;row++){
+            for(int col=0;col<SIZE;col++){
+                SquarePair pair = new SquarePair(row,col);
+                if(getPiece(pair)!=null){
+                    if(getPiece(pair).getColor().equals(color) && getPiece(pair).getPieceType().equals("king")){
+                        return pair;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     public SquarePair getLastMove() {
         return lastMove;
     }
@@ -96,6 +110,14 @@ public class ChessBoard {
             BlackPawn blackPawn = new BlackPawn(blackPawnPos);
             setPiece(blackPawn,blackPawnPos);
         }
+
+        SquarePair whiteKingPos = new SquarePair(7,4);
+        WhiteKing whiteKing = new WhiteKing(whiteKingPos);
+        setPiece(whiteKing,whiteKingPos);
+
+        SquarePair blackKingPos = new SquarePair(0,4);
+        BlackKing blackKing = new BlackKing(blackKingPos);
+        setPiece(blackKing,blackKingPos);
     }
 
 }

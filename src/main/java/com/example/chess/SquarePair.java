@@ -11,7 +11,10 @@ public class SquarePair {
         this.row = row;
     }
 
-
+    public SquarePair(SquarePair other) {
+        this.row = other.row;
+        this.col = other.col;
+    }
 
     public int getRow() {
         return row;

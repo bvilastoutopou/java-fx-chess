@@ -10,11 +10,14 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.io.FileNotFoundException;
+
 public class Pawn extends Piece{
     public Pawn(SquarePair pos) {
         super(pos);
         pieceType = "pawn";
     }
+
 
     public String promote(){
         Stage dialog = new Stage();
@@ -47,7 +50,6 @@ public class Pawn extends Piece{
         return res[0];
     }
 
-    @Override
     public void findLegalMoves(ChessBoard chessBoard){
         legalMoves.clear();
         specialMoves.clear();
@@ -150,4 +152,5 @@ public class Pawn extends Piece{
             }
         }
     }
+
 }
