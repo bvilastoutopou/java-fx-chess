@@ -1,18 +1,97 @@
 package com.example.chess;
 
-import javafx.scene.layout.Pane;
-
 import java.io.FileNotFoundException;
 
 public class ChessBoard {
     private final int SIZE = 8;
-    private Piece[][] chessBoard = new Piece[SIZE][SIZE];
+    private final Piece[][] chessBoard = new Piece[SIZE][SIZE];
     private SquarePair lastMove;
+    private int halfMoveCounter;
     public ChessBoard() throws FileNotFoundException {
         lastMove = null;
+        halfMoveCounter = 0;
         setChessBoard();
     }
 
+    public boolean determineInsufficientMaterial(){
+        int pieceCounter = 0;
+        int whiteBishopCounter = 0;
+        int whiteKnightCounter = 0;
+        int blackBishopCounter = 0;
+        int blackKnightCounter = 0;
+        SquarePair whiteBishopPos = null;
+        SquarePair blackBishopPos = null;
+        for(int row=0;row<SIZE;row++){
+            for(int col=0;col<SIZE;col++){
+                Piece piece = getPiece(new SquarePair(row,col));
+                if(piece!=null){
+                    pieceCounter++;
+                    if(piece.getPieceType().equals("pawn") || piece.getPieceType().equals("queen") || piece.getPieceType().equals("rook")){
+                        return false;
+                    }
+                    else if(piece.getPieceType().equals("bishop")){
+                        if(piece.getColor().equals("white")){
+                            whiteBishopCounter++;
+                            whiteBishopPos = new SquarePair(row,col);
+                        }
+                        else{
+                            blackBishopCounter++;
+                            blackBishopPos = new SquarePair(row,col);
+                        }
+                    }
+                    else if(piece.getPieceType().equals("knight")){
+                        if(piece.getColor().equals("white")){
+                            whiteKnightCounter++;
+                        }
+                        else{
+                            blackKnightCounter++;
+                        }
+                    }
+                }
+            }
+        }
+        if(pieceCounter==2){
+            return true;
+        }else if(pieceCounter==3){
+            return whiteBishopCounter == 1 || blackBishopCounter == 1 || blackKnightCounter == 1 || whiteKnightCounter == 1;
+        }else if(pieceCounter==4){
+            if(whiteBishopCounter==1 && blackBishopCounter==1){
+                boolean isLightWhite = (whiteBishopPos.getRow()+whiteBishopPos.getCol())%2 == 0;
+                boolean isLightBlack = (blackBishopPos.getRow()+blackBishopPos.getCol())%2 == 0;
+                return isLightBlack == isLightWhite;
+            }
+        }
+        return false;
+    }
+
+    public int getHalfMoveCounter() {
+        return halfMoveCounter;
+    }
+
+    public void incrementHalfMoveCounter(){
+        halfMoveCounter++;
+    }
+
+    public void resetHalfMoveCounter(){
+        halfMoveCounter = 0;
+    }
+
+
+    public boolean findAllMoves(String color) throws FileNotFoundException {
+        for(int row=0;row<SIZE;row++){
+            for(int col=0;col<SIZE;col++) {
+                SquarePair pair = new SquarePair(row,col);
+                Piece piece = getPiece(pair);
+                if(piece!=null && piece.getColor().equals(color)){
+                    piece.findAllowedMoves(this);
+                    if(!piece.allowedMoves.isEmpty() || !piece.allowedSpecialMoves.isEmpty()){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     public SquarePair findKing(String color){
         for(int row=0;row<SIZE;row++){

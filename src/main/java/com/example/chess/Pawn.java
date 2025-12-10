@@ -62,7 +62,7 @@ public class Pawn extends Piece{
                 }else{
                     specialMoves.add(new SquarePair(row - 1, col));
                 }
-                if(movesDone==0 && chessBoard.getPiece(new SquarePair(row-2,col))==null){
+                if(row==6 && chessBoard.getPiece(new SquarePair(row-2,col))==null){
                     legalMoves.add(new SquarePair(row-2,col));
                 }
             }
@@ -110,7 +110,7 @@ public class Pawn extends Piece{
                 }else{
                     specialMoves.add(new SquarePair(row+1,col));
                 }
-                if(movesDone==0 && chessBoard.getPiece(new SquarePair(row+2,col))==null){
+                if(row==1 && chessBoard.getPiece(new SquarePair(row+2,col))==null){
                     legalMoves.add(new SquarePair(row+2,col));
                 }
             }

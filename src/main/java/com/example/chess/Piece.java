@@ -20,6 +20,7 @@ abstract public class Piece {
     protected Image img;
     protected ImageView imageView;
 
+
     public Piece(SquarePair pos) {
         this.pos = pos;
         movesDone = 0;
@@ -62,7 +63,7 @@ abstract public class Piece {
             }
         }
         if(!found){
-            for(SquarePair pair : specialMoves){
+            for(SquarePair pair : allowedSpecialMoves){
                 if(pair.equals(destinationSquare)){
                     found = true;
                     isSpecial = true;
@@ -71,6 +72,11 @@ abstract public class Piece {
             }
         }
         if(found){
+            boolean reset = false;
+            if(pieceType.equals("pawn")){
+                reset = true;
+                chessBoard.resetHalfMoveCounter();
+            }
             int oldRow = pos.getRow();
             int oldCol = pos.getCol();
             squares[oldRow][oldCol].getChildren().clear();
@@ -78,7 +84,11 @@ abstract public class Piece {
             int newRow = destinationSquare.getRow();
             int newCol = destinationSquare.getCol();
             if (chessBoard.getPiece(destinationSquare) != null) {
+                chessBoard.resetHalfMoveCounter();
                 squares[newRow][newCol].getChildren().clear();
+            }
+            else{
+                if(!reset)chessBoard.incrementHalfMoveCounter();
             }
             squares[newRow][newCol].getChildren().add(imageView);
             chessBoard.setPiece(this, destinationSquare);
@@ -154,6 +164,42 @@ abstract public class Piece {
                                 squares[newRow][newCol].getChildren().add(knight.getImageView());
                             }
                         }
+                    }else if(getPieceType().equals("king")){
+                        if(newCol==2) {
+                            if(getColor().equals("white")) {
+                                squares[newRow][0].getChildren().clear();
+                                WhiteRook rook = (WhiteRook) chessBoard.getPiece(new SquarePair(newRow, 0));
+                                rook.pos = new SquarePair(newRow, newCol + 1);
+                                chessBoard.setPiece(null, new SquarePair(newRow, 0));
+                                squares[newRow][newCol + 1].getChildren().add(rook.getImageView());
+                                chessBoard.setPiece(rook, new SquarePair(newRow, newCol + 1));
+
+                            }else{
+                                squares[newRow][0].getChildren().clear();
+                                BlackRook rook = (BlackRook) chessBoard.getPiece(new SquarePair(newRow, 0));
+                                rook.pos = new SquarePair(newRow, newCol + 1);
+                                chessBoard.setPiece(null, new SquarePair(newRow, 0));
+                                squares[newRow][newCol + 1].getChildren().add(rook.getImageView());
+                                chessBoard.setPiece(rook, new SquarePair(newRow, newCol + 1));
+                            }
+                        }
+                        else{
+                            if(getColor().equals("white")) {
+                                squares[newRow][7].getChildren().clear();
+                                WhiteRook rook = (WhiteRook) chessBoard.getPiece(new SquarePair(newRow, 7));
+                                rook.pos = new SquarePair(newRow, newCol - 1);
+                                chessBoard.setPiece(null, new SquarePair(newRow, 7));
+                                squares[newRow][newCol - 1].getChildren().add(rook.getImageView());
+                                chessBoard.setPiece(rook, new SquarePair(newRow, newCol - 1));
+                            }else{
+                                squares[newRow][7].getChildren().clear();
+                                BlackRook rook = (BlackRook) chessBoard.getPiece(new SquarePair(newRow, 7));
+                                rook.pos = new SquarePair(newRow, newCol - 1);
+                                chessBoard.setPiece(null, new SquarePair(newRow, 7));
+                                squares[newRow][newCol - 1].getChildren().add(rook.getImageView());
+                                chessBoard.setPiece(rook, new SquarePair(newRow, newCol - 1));
+                            }
+                        }
                     }
                 }
             }
@@ -193,10 +239,32 @@ abstract public class Piece {
             }
         }
         for(SquarePair pair: specialMoves){
-            simulateMove(chessBoard,pair);
-            boolean res = simulateMove(chessBoard,pair);
-            if(res){
-                allowedSpecialMoves.add(pair);
+            if(getPieceType().equals("king")){
+                King king = (King)this;
+                boolean isChecked = king.isChecked(chessBoard);
+                if(!isChecked){
+                    if(pair.equals(new SquarePair(pos.getRow(),2))){
+                        boolean oneSquare = simulateMove(chessBoard,new SquarePair(pos.getRow(),3));
+                        boolean twoSquare = simulateMove(chessBoard, pair);
+                        if(oneSquare && twoSquare){
+                            allowedSpecialMoves.add(pair);
+                        }
+                    }
+                    else{
+                        boolean oneSquare = simulateMove(chessBoard,new SquarePair(pos.getRow(),5));
+                        boolean twoSquare = simulateMove(chessBoard, pair);
+                        if(oneSquare && twoSquare){
+                            allowedSpecialMoves.add(pair);
+                        }
+                    }
+                }
+            }
+            else {
+                simulateMove(chessBoard, pair);
+                boolean res = simulateMove(chessBoard, pair);
+                if (res) {
+                    allowedSpecialMoves.add(pair);
+                }
             }
         }
     }

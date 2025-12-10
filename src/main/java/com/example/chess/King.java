@@ -8,6 +8,8 @@ public class King extends Piece{
         pieceType = "king";
     }
 
+
+
     public boolean isChecked(ChessBoard chessBoard) throws FileNotFoundException {
         for(int row=0;row<8;row++){
             for(int col=0;col<8;col++){
@@ -93,6 +95,40 @@ public class King extends Piece{
             pieceAtPos = chessBoard.getPiece(pair);
             if(pieceAtPos==null || !pieceAtPos.getColor().equals(getColor())) {
                 legalMoves.add(pair);
+            }
+        }
+        if(movesDone==0){
+            Piece leftSide = chessBoard.getPiece(new SquarePair(row,0));
+            Piece rightSide = chessBoard.getPiece(new SquarePair(row,7));
+
+            if(leftSide!=null && leftSide.getPieceType().equals("rook")){
+                if(leftSide.movesDone==0){
+                    boolean hasBetweenPieces = false;
+                    for(int i=1;i<4;i++){
+                        if(chessBoard.getPiece(new SquarePair(row,i))!=null){
+                            hasBetweenPieces = true;
+                            break;
+                        }
+                    }
+                    if(!hasBetweenPieces){
+                        specialMoves.add(new SquarePair(row,col-2));
+                    }
+                }
+            }
+
+            if(rightSide!=null && rightSide.getPieceType().equals("rook")){
+                if(rightSide.movesDone==0){
+                    boolean hasBetweenPieces = false;
+                    for(int i=5;i<7;i++){
+                        if(chessBoard.getPiece(new SquarePair(row,i))!=null){
+                            hasBetweenPieces = true;
+                            break;
+                        }
+                    }
+                    if(!hasBetweenPieces){
+                        specialMoves.add(new SquarePair(row,col+2));
+                    }
+                }
             }
         }
     }
