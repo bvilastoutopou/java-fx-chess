@@ -4,10 +4,14 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.text.Text;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+
 
 
 public class ChessController {
@@ -25,11 +29,19 @@ public class ChessController {
     Button newGameButton;
     @FXML
     Button drawButton;
+
+    private String whiteWins = "C:\\Users\\capta\\Desktop\\all\\programs\\java\\java fx\\Ergasia\\Chess\\src\\main\\resources\\com\\example\\chess\\sounds\\whiteWins.mp3";
+    private String blackWins = "C:\\Users\\capta\\Desktop\\all\\programs\\java\\java fx\\Ergasia\\Chess\\src\\main\\resources\\com\\example\\chess\\sounds\\blackWins.mp3";
+    private String draw = "C:\\Users\\capta\\Desktop\\all\\programs\\java\\java fx\\Ergasia\\Chess\\src\\main\\resources\\com\\example\\chess\\sounds\\draw.mp3";
+    private String check = "C:\\Users\\capta\\Desktop\\all\\programs\\java\\java fx\\Ergasia\\Chess\\src\\main\\resources\\com\\example\\chess\\sounds\\check.mp3";
+
     public ChessController() throws FileNotFoundException {
     }
 
     @FXML
     public void initialize() {
+        String key = chessBoard.getPositionKey(whitePlays);
+        chessBoard.getRepetitionTable().put(key,chessBoard.getRepetitionTable().put(key, 1));
         gameOver = false;
         newGame();
         draw();
@@ -52,13 +64,27 @@ public class ChessController {
                 King king = (King)chessBoard.getPiece(kingPos);
                 boolean isChecked = king.isChecked(chessBoard);
                 if(isChecked){
+                    Media blackWinsSoundMedia = new Media(new File(blackWins).toURI().toString());
+                    MediaPlayer blackWinsSoundMediaPlayer = new MediaPlayer(blackWinsSoundMedia);
+                    blackWinsSoundMediaPlayer.play();
                     playingText.setText("Black Wins");
                     changeBorderColor("black",kingPos);
                 }
                 else{
+                    Media drawSoundMedia = new Media(new File(draw).toURI().toString());
+                    MediaPlayer drawSoundMediaPlayer = new MediaPlayer(drawSoundMedia);
+                    drawSoundMediaPlayer.play();
                     playingText.setText("Stalemate");
                 }
             }else {
+                SquarePair kingPos = chessBoard.findKing("white");
+                King king = (King)chessBoard.getPiece(kingPos);
+                boolean isChecked = king.isChecked(chessBoard);
+                if(isChecked) {
+                    Media checkSoundMedia = new Media(new File(check).toURI().toString());
+                    MediaPlayer checkSoundMediaPlayer = new MediaPlayer(checkSoundMedia);
+                    checkSoundMediaPlayer.play();
+                }
                 playingText.setText("White Plays");
             }
         }
@@ -70,6 +96,9 @@ public class ChessController {
                 King king = (King) chessBoard.getPiece(kingPos);
                 boolean isChecked = king.isChecked(chessBoard);
                 if (isChecked) {
+                    Media whiteWinsSoundMedia = new Media(new File(whiteWins).toURI().toString());
+                    MediaPlayer whiteWinsSoundMediaPlayer = new MediaPlayer(whiteWinsSoundMedia);
+                    whiteWinsSoundMediaPlayer.play();
                     playingText.setText("White Wins");
                     changeBorderColor("black",kingPos);
                 } else {
@@ -77,11 +106,23 @@ public class ChessController {
                 }
             }
             else{
+                SquarePair kingPos = chessBoard.findKing("black");
+                King king = (King)chessBoard.getPiece(kingPos);
+                boolean isChecked = king.isChecked(chessBoard);
+                if(isChecked) {
+                    Media checkSoundMedia = new Media(new File(check).toURI().toString());
+                    MediaPlayer checkSoundMediaPlayer = new MediaPlayer(checkSoundMedia);
+                    checkSoundMediaPlayer.play();
+                }
                 playingText.setText("Black Plays");
             }
         }
         if(!gameOver){
-            if(chessBoard.getHalfMoveCounter()>=100 || chessBoard.determineInsufficientMaterial()){
+            String key = chessBoard.getPositionKey(whitePlays);
+            if(chessBoard.getHalfMoveCounter()>=100 || chessBoard.determineInsufficientMaterial() || chessBoard.getRepetitionTable().get(key)>=3){
+                Media drawSoundMedia = new Media(new File(draw).toURI().toString());
+                MediaPlayer drawSoundMediaPlayer = new MediaPlayer(drawSoundMedia);
+                drawSoundMediaPlayer.play();
                 gameOver = true;
                 playingText.setText("     Draw");
             }
@@ -310,8 +351,13 @@ public class ChessController {
 
     public void draw(){
         drawButton.setOnMouseClicked(event -> {
+            if(!gameOver){
+            Media drawSoundMedia = new Media(new File(draw).toURI().toString());
+            MediaPlayer drawSoundMediaPlayer = new MediaPlayer(drawSoundMedia);
+            drawSoundMediaPlayer.play();
             gameOver = true;
             playingText.setText("     Draw");
+            }
         });
     }
 }

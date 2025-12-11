@@ -2,10 +2,14 @@ package com.example.chess;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+
 
 abstract public class Piece {
     protected int movesDone;
@@ -19,8 +23,8 @@ abstract public class Piece {
     protected FileInputStream inputStream;
     protected Image img;
     protected ImageView imageView;
-
-
+    protected String moveSound = "C:\\Users\\capta\\Desktop\\all\\programs\\java\\java fx\\Ergasia\\Chess\\src\\main\\resources\\com\\example\\chess\\sounds\\move.mp3";
+    protected String captureSound = "C:\\Users\\capta\\Desktop\\all\\programs\\java\\java fx\\Ergasia\\Chess\\src\\main\\resources\\com\\example\\chess\\sounds\\capture.mp3";
     public Piece(SquarePair pos) {
         this.pos = pos;
         movesDone = 0;
@@ -54,6 +58,10 @@ abstract public class Piece {
 
 
     public boolean move(ChessBoard chessBoard, SquarePair destinationSquare, Pane[][] squares) throws FileNotFoundException {
+        Media moveSoundMedia = new Media(new File(moveSound).toURI().toString());
+        MediaPlayer moveSoundMediaPlayer = new MediaPlayer(moveSoundMedia);
+        Media captureSoundMedia = new Media(new File(captureSound).toURI().toString());
+        MediaPlayer captureSoundMediaPlayer = new MediaPlayer(captureSoundMedia);
         boolean found = false;
         boolean isSpecial = false;
         for(SquarePair pair : allowedMoves){
@@ -84,10 +92,12 @@ abstract public class Piece {
             int newRow = destinationSquare.getRow();
             int newCol = destinationSquare.getCol();
             if (chessBoard.getPiece(destinationSquare) != null) {
+                captureSoundMediaPlayer.play();
                 chessBoard.resetHalfMoveCounter();
                 squares[newRow][newCol].getChildren().clear();
             }
             else{
+                moveSoundMediaPlayer.play();
                 if(!reset)chessBoard.incrementHalfMoveCounter();
             }
             squares[newRow][newCol].getChildren().add(imageView);
@@ -203,7 +213,16 @@ abstract public class Piece {
                     }
                 }
             }
+            color = chessBoard.getPiece(destinationSquare).getColor();
+            boolean whitePlays;
+            if(color.equals("white")){
+                whitePlays = false;
+            }else{
+                whitePlays = true;
+            }
             chessBoard.setLastMove(destinationSquare);
+            String key = chessBoard.getPositionKey(whitePlays);
+            chessBoard.getRepetitionTable().put(key,chessBoard.getRepetitionTable().getOrDefault(key, 0) + 1);
         }
         return found;
     }

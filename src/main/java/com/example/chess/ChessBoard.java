@@ -1,16 +1,157 @@
 package com.example.chess;
 
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 
 public class ChessBoard {
     private final int SIZE = 8;
     private final Piece[][] chessBoard = new Piece[SIZE][SIZE];
-    private SquarePair lastMove;
+    private SquarePair lastMove = null;
     private int halfMoveCounter;
+    private HashMap<String,Integer> repetitionTable = new HashMap<>();
+
+    public HashMap<String, Integer> getRepetitionTable() {
+        return repetitionTable;
+    }
+
+    public void setRepetitionTable(HashMap<String, Integer> repetitionTable) {
+        this.repetitionTable = repetitionTable;
+    }
+
     public ChessBoard() throws FileNotFoundException {
         lastMove = null;
         halfMoveCounter = 0;
         setChessBoard();
+    }
+
+    public String getPositionKey(boolean whitePlays){
+        StringBuilder key = new StringBuilder();
+
+        for(int row=0;row<SIZE;row++){
+            int empty =0;
+            for(int col=0;col<SIZE;col++){
+                Piece piece = getPiece(new SquarePair(row,col));
+                if(piece==null)empty++;
+                else{
+                    if(empty>0){
+                        key.append(empty);
+                        empty=0;
+                    }
+                    key.append(pieceToChar(piece));
+                }
+            }
+            if(empty>0)key.append(empty);
+            if(row<7)key.append('/');
+        }
+        if(whitePlays){
+            key.append(" w ");
+        }
+        else{
+            key.append(" b ");
+        }
+
+        Piece whiteKing = getPiece(new SquarePair(7,4));
+        Piece blackKing = getPiece(new SquarePair(0,4));
+
+        Piece leftWhiteRook = getPiece(new SquarePair(7,0));
+        Piece rightWhiteRook = getPiece(new SquarePair(7,7));
+
+        Piece leftBlackRook = getPiece(new SquarePair(0,0));
+        Piece rightBlackRook = getPiece(new SquarePair(0,7));
+
+        String castling = "";
+
+        if(whiteKing!=null){
+            if(whiteKing.getPieceType().equals("king") && whiteKing.getColor().equals("white")){
+                if(whiteKing.movesDone==0){
+                    if(rightWhiteRook!=null){
+                        if(rightWhiteRook.getPieceType().equals("rook") && rightWhiteRook.getColor().equals("white")){
+                            if(rightWhiteRook.movesDone==0)castling+="K";
+                        }
+                    }
+                    if(leftWhiteRook!=null){
+                        if(leftWhiteRook.getPieceType().equals("rook") && leftWhiteRook.getColor().equals("white")){
+                            if(leftWhiteRook.movesDone==0)castling+="Q";
+                        }
+                    }
+
+                }
+            }
+        }
+
+        if(blackKing!=null){
+            if(blackKing.getPieceType().equals("king") && blackKing.getColor().equals("black")){
+                if(blackKing.movesDone==0){
+                    if(rightBlackRook!=null){
+                        if(rightBlackRook.getPieceType().equals("rook") && rightBlackRook.getColor().equals("black")){
+                            if(rightBlackRook.movesDone==0)castling+="k";
+                        }
+                    }
+                    if(leftBlackRook!=null){
+                        if(leftBlackRook.getPieceType().equals("rook") && leftBlackRook.getColor().equals("black")){
+                            if(leftBlackRook.movesDone==0)castling+="q";
+                        }
+                    }
+
+                }
+            }
+        }
+
+        if(castling.isEmpty()){
+            key.append("-");
+        }
+        else{
+            key.append(castling);
+        }
+        key.append(" ");
+        boolean enPassable = lastMove == null;
+        Piece enPassant = null;
+        if(lastMove!=null) {
+            enPassant = getPiece(lastMove);
+        }
+
+        if (enPassant!=null){
+            if(enPassant.getPieceType().equals("pawn")){
+                if(enPassant.movesDone==1){
+                    if(enPassant.getColor().equals("white")){
+                        if(lastMove.getRow()==4){
+                            key.append('a' +lastMove.getCol());
+                            key.append(5);
+                            enPassable = true;
+                        }
+                    }else{
+                        if(lastMove.getRow()==3){
+                            key.append('a' +lastMove.getCol());
+                            key.append(2);
+                            enPassable = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        if(!enPassable){
+            key.append("-");
+        }
+
+        return key.toString();
+    }
+
+    private char pieceToChar(Piece piece){
+        char c = switch(piece.getPieceType()){
+            case "king" -> 'k';
+            case "queen" -> 'q';
+            case "rook" -> 'r';
+            case "bishop" -> 'b';
+            case "knight" -> 'n';
+            case "pawn" -> 'p';
+            default -> '?';
+        };
+        if(piece.getColor().equals("white")){
+            return Character.toUpperCase(c);
+        }else{
+            return c;
+        }
     }
 
     public boolean determineInsufficientMaterial(){
