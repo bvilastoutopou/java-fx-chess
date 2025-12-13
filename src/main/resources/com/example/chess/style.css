@@ -1,0 +1,57 @@
+.main-button {
+    -fx-background-color : #0075E5;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 30px;
+}
+
+
+.main-button-hover {
+    -fx-background-color : #769656;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 30px;
+}
+
+.cancel-button {
+    -fx-background-color : #A33A3A;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 30px;
+}
+
+.apply-button {
+    -fx-background-color : #769656;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 30px;
+}
+
+.language-button-clicked {
+    -fx-background-color : orange;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 30px;
+}
+
+.language-button-hover {
+    -fx-background-color : darkgreen;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 30px;
+}
+
+.cancel-button-hover {
+    -fx-background-color : darkred;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 30px;
+}
+
+.apply-button-hover {
+    -fx-background-color : lightgreen;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 30px;
+}
+

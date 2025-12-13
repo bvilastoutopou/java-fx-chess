@@ -10,7 +10,7 @@ import java.io.IOException;
 public class Chess extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(Chess.class.getResource("main-game.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(Chess.class.getResource("main-menu.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1280, 720);
         stage.setTitle("Chess");
         stage.setScene(scene);

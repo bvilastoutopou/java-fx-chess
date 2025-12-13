@@ -5,12 +5,14 @@ import javafx.scene.image.ImageView;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 public class BlackQueen extends Queen{
     public BlackQueen(SquarePair pos) throws FileNotFoundException {
         super(pos);
         setColor("black");
-        inputStream = new FileInputStream("C:\\Users\\capta\\Desktop\\all\\programs\\java\\java fx\\Ergasia\\Chess\\src\\main\\resources\\com\\example\\chess\\pieces\\black-queen.png");
+        InputStream inputStream = getClass().getResourceAsStream("/com/example/chess/pieces/black-queen.png");
+        assert inputStream != null;
         img = new Image(inputStream);
         imageView = new ImageView(img);
         imageView.setFitHeight(60);
