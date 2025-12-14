@@ -9,27 +9,33 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
 import java.io.FileNotFoundException;
+import java.util.ResourceBundle;
+
 
 public class Pawn extends Piece{
+    private ResourceBundle bundle;
+
+
     public Pawn(SquarePair pos) {
         super(pos);
         pieceType = "pawn";
+        Language.setLocale(SettingsManager.get("language"));
+        bundle = Language.getBundle();
     }
 
 
     public String promote(){
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.setTitle("Pawn promotion");
+        dialog.setTitle(bundle.getString("action.pawnpromotion"));
 
         dialog.setOnCloseRequest(Event::consume);
 
-        Button queen = new Button("Queen");
-        Button rook = new Button("Rook");
-        Button bishop = new Button("Bishop");
-        Button knight = new Button("Knight");
+        Button queen = new Button(bundle.getString("piece.queen"));
+        Button rook = new Button(bundle.getString("piece.rook"));
+        Button bishop = new Button(bundle.getString("piece.bishop"));
+        Button knight = new Button(bundle.getString("piece.knight"));
 
         final String[] res = {null};
 

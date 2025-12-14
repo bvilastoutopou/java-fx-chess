@@ -15,6 +15,7 @@ public class SettingsManager {
         } catch (IOException e) {
             properties.setProperty("theme", "0");
             properties.setProperty("language", "en");
+            properties.setProperty("FEN","rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             save();
         }
     }

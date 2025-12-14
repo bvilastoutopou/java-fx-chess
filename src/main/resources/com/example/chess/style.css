@@ -55,3 +55,17 @@
     -fx-font-size: 30px;
 }
 
+.white-button {
+    -fx-background-color : white;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 24px;
+}
+
+.gray-button {
+    -fx-background-color : lightgray;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 24px;
+}
+

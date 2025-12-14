@@ -52,12 +52,12 @@
             <Font size="24.0" />
          </font>
       </Text>
-      <Button fx:id="newGameButton" layoutX="1100.0" layoutY="280.0" mnemonicParsing="false" prefHeight="73.0" prefWidth="166.0" text="New Game">
+      <Button fx:id="newGameButton" layoutX="1100.0" layoutY="280.0" mnemonicParsing="false" prefHeight="73.0" prefWidth="166.0" styleClass="white-button" stylesheets="@style.css" text="New Game">
          <font>
             <Font size="24.0" />
          </font>
       </Button>
-      <Button fx:id="drawButton" layoutX="1100.0" layoutY="376.0" mnemonicParsing="false" prefHeight="73.0" prefWidth="166.0" text="Draw">
+      <Button fx:id="drawButton" layoutX="1100.0" layoutY="376.0" mnemonicParsing="false" prefHeight="73.0" prefWidth="166.0" styleClass="white-button" stylesheets="@style.css" text="Draw">
          <font>
             <Font size="24.0" />
          </font>

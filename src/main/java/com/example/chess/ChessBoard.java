@@ -9,7 +9,7 @@ public class ChessBoard {
     private SquarePair lastMove = null;
     private int halfMoveCounter;
     private HashMap<String,Integer> repetitionTable = new HashMap<>();
-
+    private int fullMoveCounter;
     public HashMap<String, Integer> getRepetitionTable() {
         return repetitionTable;
     }
@@ -21,6 +21,7 @@ public class ChessBoard {
     public ChessBoard() throws FileNotFoundException {
         lastMove = null;
         halfMoveCounter = 0;
+        fullMoveCounter = 1;
         setChessBoard();
     }
 
@@ -104,7 +105,7 @@ public class ChessBoard {
             key.append(castling);
         }
         key.append(" ");
-        boolean enPassable = lastMove == null;
+        boolean enPassable = false;
         Piece enPassant = null;
         if(lastMove!=null) {
             enPassant = getPiece(lastMove);
@@ -115,13 +116,13 @@ public class ChessBoard {
                 if(enPassant.movesDone==1){
                     if(enPassant.getColor().equals("white")){
                         if(lastMove.getRow()==4){
-                            key.append('a' +lastMove.getCol());
+                            key.append((char)('a' +lastMove.getCol()));
                             key.append(5);
                             enPassable = true;
                         }
                     }else{
                         if(lastMove.getRow()==3){
-                            key.append('a' +lastMove.getCol());
+                            key.append((char)('a' +lastMove.getCol()));
                             key.append(2);
                             enPassable = true;
                         }
@@ -136,6 +137,111 @@ public class ChessBoard {
 
         return key.toString();
     }
+
+    public String fenGenerator(boolean whitePlays){
+        String fen = getPositionKey(whitePlays);
+        fen += " " + halfMoveCounter + " " + fullMoveCounter;
+        if(lastMove != null){
+            fen += " " + (char)('a' + lastMove.getCol()) + (lastMove.getRow());
+        } else {
+            fen += " -";
+        }
+
+        return fen;
+    }
+
+    public void fenLoader(String fen) throws FileNotFoundException {
+        String[] tokens = fen.split(" ");
+        if(tokens.length < 6) throw new IllegalArgumentException("Invalid FEN string");
+
+        String boardPart = tokens[0];
+        String turn = tokens[1];
+        String castling = tokens[2];
+        String enPassantField = tokens[3];
+        int halfMove = Integer.parseInt(tokens[4]);
+        int fullMove = Integer.parseInt(tokens[5]);
+        String lastMoveField = tokens.length > 6 ? tokens[6] : "-";
+
+
+        for(int row=0; row<SIZE; row++){
+            for(int col=0; col<SIZE; col++){
+                chessBoard[row][col] = null;
+            }
+        }
+
+        String[] rows = boardPart.split("/");
+        for(int row=0; row<SIZE; row++){
+            String rowStr = rows[row];
+            int col = 0;
+            for(char c : rowStr.toCharArray()){
+                if(Character.isDigit(c)){
+                    col += c - '0';
+                } else {
+                    SquarePair pos = new SquarePair(row, col);
+                    Piece piece = charToPiece(c, pos);
+                    setPiece(piece, pos);
+                    col++;
+                }
+            }
+        }
+
+        boolean whitePlays = turn.equals("w");
+
+
+        Piece whiteKing = getPiece(new SquarePair(7,4));
+        Piece blackKing = getPiece(new SquarePair(0,4));
+
+
+        if(whiteKing != null && whiteKing.getPieceType().equals("king")) whiteKing.movesDone = castling.contains("K") || castling.contains("Q") ? 0 : 1;
+        if(blackKing != null && blackKing.getPieceType().equals("king")) blackKing.movesDone = castling.contains("k") || castling.contains("q") ? 0 : 1;
+
+        Piece rightWhiteRook = getPiece(new SquarePair(7,7));
+        Piece leftWhiteRook = getPiece(new SquarePair(7,0));
+        Piece rightBlackRook = getPiece(new SquarePair(0,7));
+        Piece leftBlackRook = getPiece(new SquarePair(0,0));
+
+        if(rightWhiteRook != null && rightWhiteRook.getPieceType().equals("rook")) rightWhiteRook.movesDone = castling.contains("K") ? 0 : 1;
+        if(leftWhiteRook != null && leftWhiteRook.getPieceType().equals("rook")) leftWhiteRook.movesDone = castling.contains("Q") ? 0 : 1;
+        if(rightBlackRook != null && rightBlackRook.getPieceType().equals("rook")) rightBlackRook.movesDone = castling.contains("k") ? 0 : 1;
+        if(leftBlackRook != null && leftBlackRook.getPieceType().equals("rook")) leftBlackRook.movesDone = castling.contains("q") ? 0 : 1;
+
+        if(!lastMoveField.equals("-")){
+            int col = lastMoveField.charAt(0) - 'a';
+            int row;
+            if(whitePlays) {
+                row = 3;
+            }
+            else{
+                row = 4;
+            }
+            lastMove = new SquarePair(row, col);
+        }
+
+        if(!enPassantField.equals("-")) {
+            int col = enPassantField.charAt(0) - 'a';
+            int row = 8 - Character.getNumericValue(enPassantField.charAt(1));
+            Piece p = getPiece(lastMove);
+            p.movesDone = 1;
+        }
+
+        halfMoveCounter = halfMove;
+        fullMoveCounter = fullMove;
+
+        for(int col=0;col<SIZE;col++){
+            Piece p = getPiece(new SquarePair(2,col));
+            if(p!=null && p.getPieceType().equals("pawn")){
+                p.setMovesDone(1);
+            }
+        }
+        for(int col=0;col<SIZE;col++){
+            Piece p = getPiece(new SquarePair(5,col));
+            if(p!=null && p.getPieceType().equals("pawn")){
+                p.setMovesDone(1);
+            }
+        }
+
+    }
+
 
     private char pieceToChar(Piece piece){
         char c = switch(piece.getPieceType()){
@@ -152,6 +258,20 @@ public class ChessBoard {
         }else{
             return c;
         }
+    }
+
+    private Piece charToPiece(char c, SquarePair position) throws FileNotFoundException {
+        boolean white = Character.isUpperCase(c);
+        char lower = Character.toLowerCase(c);
+        return switch(lower) {
+            case 'k' -> white ? new WhiteKing(position) : new BlackKing(position);
+            case 'q' -> white ? new WhiteQueen(position) : new BlackQueen(position);
+            case 'r' -> white ? new WhiteRook(position) : new BlackRook(position);
+            case 'b' -> white ? new WhiteBishop(position) : new BlackBishop(position);
+            case 'n' -> white ? new WhiteKnight(position) : new BlackKnight(position);
+            case 'p' -> white ? new WhitePawn(position) : new BlackPawn(position);
+            default -> null;
+        };
     }
 
     public boolean determineInsufficientMaterial(){
@@ -217,6 +337,13 @@ public class ChessBoard {
         halfMoveCounter = 0;
     }
 
+    public int getFullMoveCounter() {
+        return fullMoveCounter;
+    }
+
+    public void incrementFullMoveCounter(){
+        fullMoveCounter++;
+    }
 
     public boolean findAllMoves(String color) throws FileNotFoundException {
         for(int row=0;row<SIZE;row++){
@@ -269,6 +396,11 @@ public class ChessBoard {
     }
 
     public void setChessBoard() throws FileNotFoundException {
+        String savedFEN = SettingsManager.get("FEN");
+        if (savedFEN != null && !savedFEN.isEmpty()) {
+            fenLoader(savedFEN);
+            return;
+        }
         SquarePair whiteRookLeftPos = new SquarePair(7,0);
         WhiteRook whiteRookLeft = new WhiteRook(whiteRookLeftPos);
         setPiece(whiteRookLeft,whiteRookLeftPos);

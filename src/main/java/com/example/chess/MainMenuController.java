@@ -2,12 +2,16 @@ package com.example.chess;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -56,6 +60,7 @@ public class MainMenuController {
         Parent root = FXMLLoader.load(getClass().getResource("themes.fxml"));
         Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         Scene scene = new Scene(root);
+        stage.setOnCloseRequest(null);
         stage.setScene(scene);
     }
 
@@ -85,6 +90,8 @@ public class MainMenuController {
             chessController.refreshTheme();
         }
         Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+        assert chessController != null;
+        chessController.exitWarning(stage);
         Scene scene = new Scene(root);
         stage.setScene(scene);
     }
@@ -111,6 +118,7 @@ public class MainMenuController {
         Parent root = FXMLLoader.load(getClass().getResource("language.fxml"));
         Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         Scene scene = new Scene(root);
+        stage.setOnCloseRequest(null);
         stage.setScene(scene);
     }
 

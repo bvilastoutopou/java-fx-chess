@@ -23,8 +23,8 @@ abstract public class Piece {
     protected FileInputStream inputStream;
     protected Image img;
     protected ImageView imageView;
-    protected String moveSound = "C:\\Users\\capta\\Desktop\\all\\programs\\java\\java fx\\Ergasia\\Chess\\src\\main\\resources\\com\\example\\chess\\sounds\\move.mp3";
-    protected String captureSound = "C:\\Users\\capta\\Desktop\\all\\programs\\java\\java fx\\Ergasia\\Chess\\src\\main\\resources\\com\\example\\chess\\sounds\\capture.mp3";
+    protected String moveSound = getClass().getResource("/com/example/chess/sounds/move.mp3").toExternalForm();
+    protected String captureSound = getClass().getResource("/com/example/chess/sounds/capture.mp3").toExternalForm();
     public Piece(SquarePair pos) {
         this.pos = pos;
         movesDone = 0;
@@ -58,9 +58,9 @@ abstract public class Piece {
 
 
     public boolean move(ChessBoard chessBoard, SquarePair destinationSquare, Pane[][] squares) throws FileNotFoundException {
-        Media moveSoundMedia = new Media(new File(moveSound).toURI().toString());
+        Media moveSoundMedia = new Media(moveSound);
+        Media captureSoundMedia = new Media(captureSound);
         MediaPlayer moveSoundMediaPlayer = new MediaPlayer(moveSoundMedia);
-        Media captureSoundMedia = new Media(new File(captureSound).toURI().toString());
         MediaPlayer captureSoundMediaPlayer = new MediaPlayer(captureSoundMedia);
         boolean found = false;
         boolean isSpecial = false;
@@ -218,11 +218,12 @@ abstract public class Piece {
             if(color.equals("white")){
                 whitePlays = false;
             }else{
+                chessBoard.incrementFullMoveCounter();
                 whitePlays = true;
             }
             chessBoard.setLastMove(destinationSquare);
             String key = chessBoard.getPositionKey(whitePlays);
-            chessBoard.getRepetitionTable().put(key,chessBoard.getRepetitionTable().getOrDefault(key, 0) + 1);
+            chessBoard.getRepetitionTable().put(key,chessBoard.getRepetitionTable().getOrDefault(key, 0) + 1);;
         }
         return found;
     }
