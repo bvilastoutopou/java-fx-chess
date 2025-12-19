@@ -62,6 +62,20 @@
     -fx-font-size: 24px;
 }
 
+.white-button-undo-redo {
+    -fx-background-color : white;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 18px;
+}
+
+.gray-button-undo-redo {
+    -fx-background-color : lightgray;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 18px;
+}
+
 .gray-button {
     -fx-background-color : lightgray;
     -fx-background-radius: 15;

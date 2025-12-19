@@ -2,16 +2,29 @@ package com.example.chess;
 
 import java.io.FileNotFoundException;
 import java.util.HashMap;
+import java.util.Stack;
 
 public class ChessBoard {
     private final int SIZE = 8;
     private final Piece[][] chessBoard = new Piece[SIZE][SIZE];
     private SquarePair lastMove = null;
+    private SquarePair lastMoveOrigin = null;
     private int halfMoveCounter;
     private HashMap<String,Integer> repetitionTable = new HashMap<>();
     private int fullMoveCounter;
+    Stack<String> undoStack = new Stack<>();
+    Stack<String> redoStack = new Stack<>();
     public HashMap<String, Integer> getRepetitionTable() {
         return repetitionTable;
+    }
+    Stack<String> repetitionUndoStack = new Stack<>();
+    Stack<String> repetitionRedoStack = new Stack<>();
+    public SquarePair getLastMoveOrigin() {
+        return lastMoveOrigin;
+    }
+
+    public void setLastMoveOrigin(SquarePair lastMoveOrigin) {
+        this.lastMoveOrigin = lastMoveOrigin;
     }
 
     public void setRepetitionTable(HashMap<String, Integer> repetitionTable) {
@@ -143,6 +156,7 @@ public class ChessBoard {
         fen += " " + halfMoveCounter + " " + fullMoveCounter;
         if(lastMove != null){
             fen += " " + (char)('a' + lastMove.getCol()) + (lastMove.getRow());
+            fen += " " + (char)('a' + lastMoveOrigin.getCol()) + (lastMoveOrigin.getRow());
         } else {
             fen += " -";
         }
@@ -161,6 +175,7 @@ public class ChessBoard {
         int halfMove = Integer.parseInt(tokens[4]);
         int fullMove = Integer.parseInt(tokens[5]);
         String lastMoveField = tokens.length > 6 ? tokens[6] : "-";
+        String lastMoveOriginField = tokens.length > 7 ? tokens[7] : "-";
 
 
         for(int row=0; row<SIZE; row++){
@@ -207,14 +222,13 @@ public class ChessBoard {
 
         if(!lastMoveField.equals("-")){
             int col = lastMoveField.charAt(0) - 'a';
-            int row;
-            if(whitePlays) {
-                row = 3;
-            }
-            else{
-                row = 4;
-            }
+            int row = Character.getNumericValue(lastMoveField.charAt(1));
             lastMove = new SquarePair(row, col);
+        }
+        if(!lastMoveOriginField.equals("-")){
+            int col = lastMoveOriginField.charAt(0) - 'a';
+            int row = Character.getNumericValue(lastMoveOriginField.charAt(1));
+            lastMoveOrigin = new SquarePair(row, col);
         }
 
         if(!enPassantField.equals("-")) {

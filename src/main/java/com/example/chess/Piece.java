@@ -80,6 +80,15 @@ abstract public class Piece {
             }
         }
         if(found){
+            boolean whitePlays;
+            if(this.color.equals("white")){
+                whitePlays = true;
+            }else{
+                whitePlays = false;
+            }
+            String fen = chessBoard.fenGenerator(whitePlays);
+            chessBoard.undoStack.push(fen);
+            chessBoard.redoStack.clear();
             boolean reset = false;
             if(pieceType.equals("pawn")){
                 reset = true;
@@ -214,15 +223,17 @@ abstract public class Piece {
                 }
             }
             color = chessBoard.getPiece(destinationSquare).getColor();
-            boolean whitePlays;
             if(color.equals("white")){
                 whitePlays = false;
             }else{
                 chessBoard.incrementFullMoveCounter();
                 whitePlays = true;
             }
+            chessBoard.setLastMoveOrigin(new SquarePair(oldRow,oldCol));
             chessBoard.setLastMove(destinationSquare);
             String key = chessBoard.getPositionKey(whitePlays);
+            chessBoard.repetitionUndoStack.push(key);
+            chessBoard.repetitionRedoStack.clear();
             chessBoard.getRepetitionTable().put(key,chessBoard.getRepetitionTable().getOrDefault(key, 0) + 1);;
         }
         return found;
@@ -259,6 +270,7 @@ abstract public class Piece {
             chessBoard.setPiece(oldPiece, destinationSquare);
         }else{
             chessBoard.setPiece(oldPiece, new SquarePair(oldPos.getRow(),destinationSquare.getCol()));
+            chessBoard.setPiece(null,destinationSquare);
         }
 
         return safe;
@@ -269,7 +281,6 @@ abstract public class Piece {
         allowedMoves.clear();
         allowedSpecialMoves.clear();
         for(SquarePair pair: legalMoves){
-            simulateMove(chessBoard,pair,false);
             boolean res = simulateMove(chessBoard,pair,false);
             if(res){
                 allowedMoves.add(pair);

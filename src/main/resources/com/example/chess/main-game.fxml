@@ -94,10 +94,12 @@
           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
       </GridPane>
-      <Text fx:id="playingText" fill="WHITE" layoutX="1091.0" layoutY="651.0" strokeType="OUTSIDE" strokeWidth="0.0" text="White Plays">
+      <Text fx:id="playingText" fill="WHITE" layoutX="1091.0" layoutY="611.0" strokeType="OUTSIDE" strokeWidth="0.0" text="White Plays">
          <font>
             <Font size="20.0" />
          </font>
       </Text>
+      <Button fx:id="undoButton" layoutX="1091.0" layoutY="632.0" mnemonicParsing="false" prefHeight="73.0" prefWidth="86.0" styleClass="white-button-undo-redo" stylesheets="@style.css" text="undo" />
+      <Button fx:id="redoButton" layoutX="1183.0" layoutY="632.0" mnemonicParsing="false" prefHeight="73.0" prefWidth="86.0" styleClass="white-button-undo-redo" stylesheets="@style.css" text="redo" />
    </children>
 </AnchorPane>
