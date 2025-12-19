@@ -736,6 +736,7 @@ public class ChessController {
         undoButton.setOnMouseClicked(event -> {
             if (!chessBoard.undoStack.isEmpty()) {
                 if (!chessBoard.repetitionUndoStack.isEmpty()) {
+                    selectedSquare = null;
                     String key = chessBoard.repetitionUndoStack.pop();
                     chessBoard.repetitionRedoStack.push(key);
                     int count = chessBoard.getRepetitionTable().getOrDefault(key, 0) - 1;
@@ -819,6 +820,7 @@ public class ChessController {
         redoButton.setOnMouseClicked(event -> {
             if(!chessBoard.redoStack.isEmpty()){
                 if (!chessBoard.repetitionRedoStack.isEmpty()) {
+                    selectedSquare = null;
                     String key = chessBoard.repetitionRedoStack.pop();
                     chessBoard.repetitionUndoStack.push(key);
 
@@ -894,6 +896,8 @@ public class ChessController {
         drawButton.setText(bundle.getString("button.draw"));
         newGameButton.setText(bundle.getString("button.newgame"));
         playingText.setText(bundle.getString("status.whiteplays"));
+        undoButton.setText(bundle.getString("button.undo"));
+        redoButton.setText(bundle.getString("button.redo"));
     }
 
     public void draw(){
