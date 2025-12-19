@@ -355,7 +355,7 @@ public class ChessController {
         }
         if(!gameOver){
             String key = chessBoard.getPositionKey(whitePlays);
-            if(chessBoard.getHalfMoveCounter()>=100 || chessBoard.determineInsufficientMaterial() || chessBoard.getRepetitionTable().get(key)>=3){
+            if(chessBoard.getHalfMoveCounter()>=100 || chessBoard.determineInsufficientMaterial() || (chessBoard.getRepetitionTable().get(key)!=null && chessBoard.getRepetitionTable().get(key)>=3)){
                 Media drawSoundMedia = new Media(drawSound);
                 MediaPlayer drawSoundMediaPlayer = new MediaPlayer(drawSoundMedia);
                 stopTimers();
@@ -561,15 +561,17 @@ public class ChessController {
                 if (!pair.equals(selectedSquare) && selectedSquare != null) {
                     changeBorderColor(null, selectedSquare);
                     Piece oldPiece = chessBoard.getPiece(selectedSquare);
-                    for (SquarePair squarePair : new ArrayList<>(oldPiece.allowedMoves)) {
-                        changeBorderColor(null, squarePair);
-                    }
-                    for (SquarePair squarePair : new ArrayList<>(oldPiece.specialMoves)) {
-                        changeBorderColor(null, squarePair);
+                    if(oldPiece!=null) {
+                        for (SquarePair squarePair : new ArrayList<>(oldPiece.allowedMoves)) {
+                            changeBorderColor(null, squarePair);
+                        }
+                        for (SquarePair squarePair : new ArrayList<>(oldPiece.specialMoves)) {
+                            changeBorderColor(null, squarePair);
 
+                        }
                     }
                     try {
-                        if (chessBoard.getPiece(selectedSquare).move(chessBoard, pair, squares)) {
+                        if ( chessBoard.getPiece(selectedSquare)!=null && chessBoard.getPiece(selectedSquare).move(chessBoard, pair, squares)) {
                             whitePlays = !whitePlays;
                             changeTurn();
                             if(gameOver)return;

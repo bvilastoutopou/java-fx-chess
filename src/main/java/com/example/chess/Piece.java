@@ -228,21 +228,38 @@ abstract public class Piece {
         return found;
     }
 
-    public boolean simulateMove(ChessBoard chessBoard, SquarePair destinationSquare) throws FileNotFoundException {
+    public boolean simulateMove(ChessBoard chessBoard, SquarePair destinationSquare,boolean isEnpassant) throws FileNotFoundException {
+
         SquarePair oldPos = new SquarePair(pos);
-        Piece oldPiece = chessBoard.getPiece(destinationSquare);
+        Piece oldPiece;
+        if(!isEnpassant) {
+            oldPiece = chessBoard.getPiece(destinationSquare);
+        }else{
+            oldPiece = chessBoard.getPiece(new SquarePair(oldPos.getRow(),destinationSquare.getCol()));
+        }
+
+        if(isEnpassant){
+            chessBoard.setPiece(null, new SquarePair(oldPos.getRow(),destinationSquare.getCol()));
+        }
 
         chessBoard.setPiece(null, oldPos);
         chessBoard.setPiece(this, destinationSquare);
         this.pos = destinationSquare;
 
+
+
         SquarePair kingPos = chessBoard.findKing(getColor());
         King king = (King)chessBoard.getPiece(kingPos);
         boolean safe = !king.isChecked(chessBoard);
 
+
         chessBoard.setPiece(this, oldPos);
-        chessBoard.setPiece(oldPiece, destinationSquare);
         this.pos = oldPos;
+        if(!isEnpassant) {
+            chessBoard.setPiece(oldPiece, destinationSquare);
+        }else{
+            chessBoard.setPiece(oldPiece, new SquarePair(oldPos.getRow(),destinationSquare.getCol()));
+        }
 
         return safe;
     }
@@ -252,8 +269,8 @@ abstract public class Piece {
         allowedMoves.clear();
         allowedSpecialMoves.clear();
         for(SquarePair pair: legalMoves){
-            simulateMove(chessBoard,pair);
-            boolean res = simulateMove(chessBoard,pair);
+            simulateMove(chessBoard,pair,false);
+            boolean res = simulateMove(chessBoard,pair,false);
             if(res){
                 allowedMoves.add(pair);
             }
@@ -264,15 +281,15 @@ abstract public class Piece {
                 boolean isChecked = king.isChecked(chessBoard);
                 if(!isChecked){
                     if(pair.equals(new SquarePair(pos.getRow(),2))){
-                        boolean oneSquare = simulateMove(chessBoard,new SquarePair(pos.getRow(),3));
-                        boolean twoSquare = simulateMove(chessBoard, pair);
+                        boolean oneSquare = simulateMove(chessBoard,new SquarePair(pos.getRow(),3),false);
+                        boolean twoSquare = simulateMove(chessBoard, pair,false);
                         if(oneSquare && twoSquare){
                             allowedSpecialMoves.add(pair);
                         }
                     }
                     else{
-                        boolean oneSquare = simulateMove(chessBoard,new SquarePair(pos.getRow(),5));
-                        boolean twoSquare = simulateMove(chessBoard, pair);
+                        boolean oneSquare = simulateMove(chessBoard,new SquarePair(pos.getRow(),5),false);
+                        boolean twoSquare = simulateMove(chessBoard, pair,false);
                         if(oneSquare && twoSquare){
                             allowedSpecialMoves.add(pair);
                         }
@@ -280,8 +297,13 @@ abstract public class Piece {
                 }
             }
             else {
-                simulateMove(chessBoard, pair);
-                boolean res = simulateMove(chessBoard, pair);
+                int row = pos.getRow();
+                boolean res;
+                if(row==1 || row==6) {
+                    res = simulateMove(chessBoard, pair,false);
+                }else{
+                    res = simulateMove(chessBoard, pair,true);
+                }
                 if (res) {
                     allowedSpecialMoves.add(pair);
                 }
