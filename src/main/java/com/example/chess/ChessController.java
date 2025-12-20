@@ -12,11 +12,14 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -27,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.Stack;
 
 
@@ -59,7 +63,10 @@ public class ChessController {
     private String captureColor;
     private String lastMoveColor;
     boolean resetTimers;
-
+    @FXML
+    AnchorPane mainGame;
+    @FXML
+    ImageView darkLightMode;
     @FXML
     private Text playingText;
     private boolean gameOver = false;
@@ -87,6 +94,10 @@ public class ChessController {
     Button undoButton;
     @FXML
     Button redoButton;
+    @FXML
+    Rectangle blackTimeBox;
+    @FXML
+    Rectangle whiteTimeBox;
     private String whiteWinsSound = getClass().getResource("/com/example/chess/sounds/whiteWins.mp3").toExternalForm();
 
     private String blackWinsSound = getClass().getResource("/com/example/chess/sounds/blackWins.mp3").toExternalForm();
@@ -114,7 +125,29 @@ public class ChessController {
         whitePlays = fenParts[1].equals("w");
         Language.setLocale(SettingsManager.get("language"));
         bundle = Language.getBundle();
-
+        String isDarkModeOn = SettingsManager.get("dark.mode");
+        if(isDarkModeOn.equals("on")){
+            mainGame.setStyle("-fx-background-color: #1A1A2E");
+            drawButton.getStyleClass().add("white-button-dark");
+            newGameButton.getStyleClass().add("white-button-dark");
+            undoButton.getStyleClass().add("white-button-undo-redo-dark");
+            redoButton.getStyleClass().add("white-button-undo-redo-dark");
+            blackTimeBox.setFill(Color.BLACK);
+            whiteTimeBox.setFill(Color.BLACK);
+            whiteTime.setStyle("-fx-fill: white");
+            blackTime.setStyle("-fx-fill: white");
+        }
+        else{
+            mainGame.setStyle("-fx-background-color: white");
+            drawButton.getStyleClass().remove("white-button-dark");
+            newGameButton.getStyleClass().remove("white-button-dark");
+            undoButton.getStyleClass().remove("white-button-undo-redo-dark");
+            redoButton.getStyleClass().remove("white-button-undo-redo-dark");
+            blackTimeBox.setFill(Color.WHITE);
+            whiteTimeBox.setFill(Color.WHITE);
+            whiteTime.setStyle("-fx-fill: black");
+            blackTime.setStyle("-fx-fill: black");
+        }
         applyLanguage();
         if(whitePlays){
             playingText.setText(bundle.getString("status.whiteplays"));
@@ -127,6 +160,7 @@ public class ChessController {
         backArrowHandler();
         undo();
         redo();
+        switchDarkLightMode();
         try {
             loadPieces();
         } catch (FileNotFoundException e) {
@@ -724,11 +758,21 @@ public class ChessController {
         });
 
         newGameButton.setOnMouseEntered(event -> {
-            newGameButton.getStyleClass().add("gray-button");
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                newGameButton.getStyleClass().add("gray-button-dark");
+            }else {
+                newGameButton.getStyleClass().add("gray-button");
+            }
         });
 
         newGameButton.setOnMouseExited(event -> {
-            newGameButton.getStyleClass().remove("gray-button");
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                newGameButton.getStyleClass().remove("gray-button-dark");
+            }else {
+                newGameButton.getStyleClass().remove("gray-button");
+            }
         });
     }
 
@@ -808,11 +852,21 @@ public class ChessController {
         });
 
         undoButton.setOnMouseEntered(event -> {
-            undoButton.getStyleClass().add("gray-button-undo-redo");
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                undoButton.getStyleClass().add("gray-button-undo-redo-dark");
+            }else {
+                undoButton.getStyleClass().add("gray-button-undo-redo");
+            }
         });
 
         undoButton.setOnMouseExited(event -> {
-            undoButton.getStyleClass().remove("gray-button-undo-redo");
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                undoButton.getStyleClass().remove("gray-button-undo-redo-dark");
+            }else {
+                undoButton.getStyleClass().remove("gray-button-undo-redo");
+            }
         });
     }
 
@@ -879,11 +933,21 @@ public class ChessController {
         });
 
         redoButton.setOnMouseEntered(event -> {
-            redoButton.getStyleClass().add("gray-button-undo-redo");
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                redoButton.getStyleClass().add("gray-button-undo-redo-dark");
+            }else {
+                redoButton.getStyleClass().add("gray-button-undo-redo");
+            }
         });
 
         redoButton.setOnMouseExited(event -> {
-            redoButton.getStyleClass().remove("gray-button-undo-redo");
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                redoButton.getStyleClass().remove("gray-button-undo-redo-dark");
+            }else {
+                redoButton.getStyleClass().remove("gray-button-undo-redo");
+            }
         });
     }
 
@@ -913,11 +977,21 @@ public class ChessController {
         });
 
         drawButton.setOnMouseEntered(event -> {
-            drawButton.getStyleClass().add("gray-button");
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                drawButton.getStyleClass().add("gray-button-dark");
+            }else {
+                drawButton.getStyleClass().add("gray-button");
+            }
         });
 
         drawButton.setOnMouseExited(event -> {
-            drawButton.getStyleClass().remove("gray-button");
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                drawButton.getStyleClass().remove("gray-button-dark");
+            }else {
+                drawButton.getStyleClass().remove("gray-button");
+            }
         });
     }
 
@@ -1045,5 +1119,34 @@ public class ChessController {
         stage.setScene(scene);
     }
 
+    public void switchDarkLightMode(){
+        darkLightMode.setOnMouseClicked(event -> {
+            String isDarkModeOn = SettingsManager.get("dark.mode");
+            if(isDarkModeOn.equals("off")){
+                SettingsManager.set("dark.mode","on");
+                mainGame.setStyle("-fx-background-color: #1A1A2E");
+                drawButton.getStyleClass().add("white-button-dark");
+                newGameButton.getStyleClass().add("white-button-dark");
+                undoButton.getStyleClass().add("white-button-undo-redo-dark");
+                redoButton.getStyleClass().add("white-button-undo-redo-dark");
+                blackTimeBox.setFill(Color.BLACK);
+                whiteTimeBox.setFill(Color.BLACK);
+                whiteTime.setStyle("-fx-fill: white");
+                blackTime.setStyle("-fx-fill: white");
+            }
+            else{
+                mainGame.setStyle("-fx-background-color: white");
+                SettingsManager.set("dark.mode","off");
+                drawButton.getStyleClass().remove("white-button-dark");
+                newGameButton.getStyleClass().remove("white-button-dark");
+                undoButton.getStyleClass().remove("white-button-undo-redo-dark");
+                redoButton.getStyleClass().remove("white-button-undo-redo-dark");
+                blackTimeBox.setFill(Color.WHITE);
+                whiteTimeBox.setFill(Color.WHITE);
+                whiteTime.setStyle("-fx-fill: black");
+                blackTime.setStyle("-fx-fill: black");
+            }
+        });
+    }
 
 }

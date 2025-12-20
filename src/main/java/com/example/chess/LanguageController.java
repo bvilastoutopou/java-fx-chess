@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -47,11 +48,22 @@ public class LanguageController {
     @FXML
     Button italian;
     Button[] buttons;
+    @FXML
+    ImageView darkLightMode;
+    @FXML
+    AnchorPane languageMenu;
 
     public void initialize(){
         buttons = new Button[]{english,greek,german,french,spanish,italian};
         Language.setLocale(SettingsManager.get("language"));
         bundle = Language.getBundle();
+        String isDarkModeOn = SettingsManager.get("dark.mode");
+        if(isDarkModeOn.equals("on")){
+            languageMenu.setStyle("-fx-background-color: #1A1A2E");
+        }
+        else{
+            languageMenu.setStyle("-fx-background-color: white");
+        }
         applyLanguage();
         backArrowHandler();
         selected();
@@ -59,6 +71,7 @@ public class LanguageController {
         clickHandler();
         applyButtonHandler();
         cancelButtonHandler();
+        switchDarkLightMode();
     }
 
     public void addHover(){
@@ -192,5 +205,19 @@ public class LanguageController {
         cancelButton.setText(bundle.getString("button.cancel"));
         chess.setText(bundle.getString("title.chess"));
         applyButton.setText(bundle.getString("button.apply"));
+    }
+
+    public void switchDarkLightMode(){
+        darkLightMode.setOnMouseClicked(event -> {
+            String isDarkModeOn = SettingsManager.get("dark.mode");
+            if(isDarkModeOn.equals("off")){
+                SettingsManager.set("dark.mode","on");
+                languageMenu.setStyle("-fx-background-color: #1A1A2E");
+            }
+            else{
+                languageMenu.setStyle("-fx-background-color: white");
+                SettingsManager.set("dark.mode","off");
+            }
+        });
     }
 }

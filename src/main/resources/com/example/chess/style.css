@@ -83,3 +83,40 @@
     -fx-font-size: 24px;
 }
 
+
+
+.dark-mode-on{
+    -fx-background-color: #1A1A2E;
+}
+
+.white-button-dark {
+    -fx-text-fill : white;
+    -fx-background-color : black;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 24px;
+}
+
+.white-button-undo-redo-dark {
+    -fx-text-fill : white;
+    -fx-background-color : black;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+}
+
+.gray-button-undo-redo-dark {
+    -fx-text-fill : white;
+    -fx-background-color : navy;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+}
+
+.gray-button-dark {
+    -fx-text-fill : white;
+    -fx-background-color : navy;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 24px;
+}

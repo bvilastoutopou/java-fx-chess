@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
@@ -65,7 +66,10 @@ public class ThemesController {
     Text back;
     @FXML
     Text chess;
-
+    @FXML
+    AnchorPane themeMenu;
+    @FXML
+    ImageView darkLightMode;
 
 
     int clicked = -1;
@@ -77,6 +81,27 @@ public class ThemesController {
         rectangles = new Rectangle[]{basicRec,greenRec,brownRec,blueRec,seaRec,pinkRec,orangeRec,redRec};
         Language.setLocale(SettingsManager.get("language"));
         bundle = Language.getBundle();
+        String isDarkModeOn = SettingsManager.get("dark.mode");
+        if(isDarkModeOn.equals("on")){
+            themeMenu.setStyle("-fx-background-color: #1A1A2E");
+            for (Node node : themeMenu.getChildren()) {
+                if (node instanceof Text text) {
+                    if(!text.equals(back) && !text.equals(chess) && !text.equals(themes)){
+                        text.setStyle("-fx-fill: white;");
+                    }
+                }
+            }
+        }
+        else{
+            themeMenu.setStyle("-fx-background-color: white");
+            for (Node node : themeMenu.getChildren()) {
+                if (node instanceof Text text) {
+                    if(!text.equals(back) && !text.equals(chess) && !text.equals(themes)){
+                        text.setStyle("-fx-fill: black;");
+                    }
+                }
+            }
+        }
         applyLanguage();
         backArrowHandler();
         selected();
@@ -84,6 +109,7 @@ public class ThemesController {
         clickHandler();
         applyButtonHandler();
         cancelButtonHandler();
+        switchDarkLightMode();
     }
 
     public void selected(){
@@ -187,4 +213,34 @@ public class ThemesController {
         Scene scene = new Scene(root);
         stage.setScene(scene);
     }
+
+    public void switchDarkLightMode(){
+        darkLightMode.setOnMouseClicked(event -> {
+            String isDarkModeOn = SettingsManager.get("dark.mode");
+            if(isDarkModeOn.equals("off")){
+                SettingsManager.set("dark.mode","on");
+                themeMenu.setStyle("-fx-background-color: #1A1A2E");
+                for (Node node : themeMenu.getChildren()) {
+                    if (node instanceof Text text) {
+                        if(!text.equals(back) && !text.equals(chess) && !text.equals(themes)){
+                            text.setStyle("-fx-fill: white;");
+                        }
+
+                    }
+                }
+            }
+            else{
+                themeMenu.setStyle("-fx-background-color: white");
+                SettingsManager.set("dark.mode","off");
+                for (Node node : themeMenu.getChildren()) {
+                    if (node instanceof Text text) {
+                        if(!text.equals(back) && !text.equals(chess) && !text.equals(themes)){
+                            text.setStyle("-fx-fill: black;");
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
+

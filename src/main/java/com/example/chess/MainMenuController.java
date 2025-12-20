@@ -8,7 +8,9 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
@@ -26,16 +28,28 @@ public class MainMenuController {
     Button languageButton;
     @FXML
     Text chess;
+    @FXML
+    ImageView darkLightMode;
+    @FXML
+    AnchorPane mainMenu;
     ResourceBundle bundle;
 
 
     public void initialize(){
         Language.setLocale(SettingsManager.get("language"));
         bundle = Language.getBundle();
+        String isDarkModeOn = SettingsManager.get("dark.mode");
+        if(isDarkModeOn.equals("on")){
+            mainMenu.getStyleClass().add("dark-mode-on");
+        }
+        else{
+            mainMenu.getStyleClass().remove("dark-mode-on");
+        }
         applyTranslations();
         playButtonHandler();
         themesButtonHandler();
         languageButtonHandler();
+        switchDarkLightMode();
     }
 
     public void themesButtonHandler(){
@@ -127,5 +141,19 @@ public class MainMenuController {
         themesButton.setText(bundle.getString("menu.themes"));
         languageButton.setText(bundle.getString("menu.language"));
         chess.setText(bundle.getString("title.chess"));
+    }
+
+    public void switchDarkLightMode(){
+        darkLightMode.setOnMouseClicked(event -> {
+            String isDarkModeOn = SettingsManager.get("dark.mode");
+            if(isDarkModeOn.equals("off")){
+                SettingsManager.set("dark.mode","on");
+                mainMenu.getStyleClass().add("dark-mode-on");
+            }
+            else{
+                SettingsManager.set("dark.mode","off");
+                mainMenu.getStyleClass().remove("dark-mode-on");
+            }
+        });
     }
 }
