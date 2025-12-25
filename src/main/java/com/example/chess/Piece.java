@@ -239,6 +239,139 @@ abstract public class Piece {
         return found;
     }
 
+    public boolean moveAi(ChessBoard chessBoard, SquarePair destinationSquare, Pane[][] squares) throws FileNotFoundException {
+        Media moveSoundMedia = new Media(moveSound);
+        Media captureSoundMedia = new Media(captureSound);
+        MediaPlayer moveSoundMediaPlayer = new MediaPlayer(moveSoundMedia);
+        MediaPlayer captureSoundMediaPlayer = new MediaPlayer(captureSoundMedia);
+        boolean found = false;
+        boolean isSpecial = false;
+        findAllowedMoves(chessBoard);
+        for(SquarePair pair : allowedMoves){
+            if(pair.equals(destinationSquare)){
+                found = true;
+                break;
+            }
+        }
+        if(!found){
+            for(SquarePair pair : allowedSpecialMoves){
+                if(pair.equals(destinationSquare)){
+                    found = true;
+                    isSpecial = true;
+                    break;
+                }
+            }
+        }
+        if(found){
+            boolean whitePlays;
+            if(this.color.equals("white")){
+                whitePlays = true;
+            }else{
+                whitePlays = false;
+            }
+            String fen = chessBoard.fenGenerator(whitePlays);
+            chessBoard.undoStack.push(fen);
+            chessBoard.redoStack.clear();
+            boolean reset = false;
+            if(pieceType.equals("pawn")){
+                reset = true;
+                chessBoard.resetHalfMoveCounter();
+            }
+            int oldRow = pos.getRow();
+            int oldCol = pos.getCol();
+            squares[oldRow][oldCol].getChildren().clear();
+            chessBoard.setPiece(null,pos);
+            int newRow = destinationSquare.getRow();
+            int newCol = destinationSquare.getCol();
+            if (chessBoard.getPiece(destinationSquare) != null) {
+                captureSoundMediaPlayer.play();
+                chessBoard.resetHalfMoveCounter();
+                squares[newRow][newCol].getChildren().clear();
+            }
+            else{
+                moveSoundMediaPlayer.play();
+                if(!reset)chessBoard.incrementHalfMoveCounter();
+            }
+            squares[newRow][newCol].getChildren().add(imageView);
+            chessBoard.setPiece(this, destinationSquare);
+            pos = destinationSquare;
+            movesDone++;
+            if(isSpecial){
+                if(oldRow==3 || oldRow==4){
+                    squares[oldRow][newCol].getChildren().clear();
+                    chessBoard.setPiece(null,new SquarePair(oldRow,newCol));
+                }
+                if (newRow == 0 || newRow == 7) {
+                    if(getPieceType().equals("pawn")){
+                        if(getColor().equals("white")){
+                            WhiteQueen queen = new WhiteQueen(pos);
+                            queen.setMovesDone(movesDone);
+                            chessBoard.setPiece(queen,pos);
+                            squares[newRow][newCol].getChildren().clear();
+                            squares[newRow][newCol].getChildren().add(queen.getImageView());
+                        }else{
+                            BlackQueen queen = new BlackQueen(pos);
+                            queen.setMovesDone(movesDone);
+                            chessBoard.setPiece(queen,pos);
+                            squares[newRow][newCol].getChildren().clear();
+                            squares[newRow][newCol].getChildren().add(queen.getImageView());
+                        }
+                    }else if(getPieceType().equals("king")){
+                        if(newCol==2) {
+                            if(getColor().equals("white")) {
+                                squares[newRow][0].getChildren().clear();
+                                WhiteRook rook = (WhiteRook) chessBoard.getPiece(new SquarePair(newRow, 0));
+                                rook.pos = new SquarePair(newRow, newCol + 1);
+                                chessBoard.setPiece(null, new SquarePair(newRow, 0));
+                                squares[newRow][newCol + 1].getChildren().add(rook.getImageView());
+                                chessBoard.setPiece(rook, new SquarePair(newRow, newCol + 1));
+
+                            }else{
+                                squares[newRow][0].getChildren().clear();
+                                BlackRook rook = (BlackRook) chessBoard.getPiece(new SquarePair(newRow, 0));
+                                rook.pos = new SquarePair(newRow, newCol + 1);
+                                chessBoard.setPiece(null, new SquarePair(newRow, 0));
+                                squares[newRow][newCol + 1].getChildren().add(rook.getImageView());
+                                chessBoard.setPiece(rook, new SquarePair(newRow, newCol + 1));
+                            }
+                        }
+                        else{
+                            if(getColor().equals("white")) {
+                                squares[newRow][7].getChildren().clear();
+                                WhiteRook rook = (WhiteRook) chessBoard.getPiece(new SquarePair(newRow, 7));
+                                rook.pos = new SquarePair(newRow, newCol - 1);
+                                chessBoard.setPiece(null, new SquarePair(newRow, 7));
+                                squares[newRow][newCol - 1].getChildren().add(rook.getImageView());
+                                chessBoard.setPiece(rook, new SquarePair(newRow, newCol - 1));
+                            }else{
+                                squares[newRow][7].getChildren().clear();
+                                BlackRook rook = (BlackRook) chessBoard.getPiece(new SquarePair(newRow, 7));
+                                rook.pos = new SquarePair(newRow, newCol - 1);
+                                chessBoard.setPiece(null, new SquarePair(newRow, 7));
+                                squares[newRow][newCol - 1].getChildren().add(rook.getImageView());
+                                chessBoard.setPiece(rook, new SquarePair(newRow, newCol - 1));
+                            }
+                        }
+                    }
+                }
+            }
+            color = chessBoard.getPiece(destinationSquare).getColor();
+            if(color.equals("white")){
+                whitePlays = false;
+            }else{
+                chessBoard.incrementFullMoveCounter();
+                whitePlays = true;
+            }
+            chessBoard.setLastMoveOrigin(new SquarePair(oldRow,oldCol));
+            chessBoard.setLastMove(destinationSquare);
+            String key = chessBoard.getPositionKey(whitePlays);
+            chessBoard.repetitionUndoStack.push(key);
+            chessBoard.repetitionRedoStack.clear();
+            chessBoard.getRepetitionTable().put(key,chessBoard.getRepetitionTable().getOrDefault(key, 0) + 1);;
+        }
+        return found;
+    }
+
     public boolean simulateMove(ChessBoard chessBoard, SquarePair destinationSquare,boolean isEnpassant) throws FileNotFoundException {
 
         SquarePair oldPos = new SquarePair(pos);

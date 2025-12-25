@@ -5,6 +5,28 @@
     -fx-font-size: 30px;
 }
 
+.main-button-small {
+    -fx-background-color : #0075E5;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 20px;
+}
+
+.main-button-gray {
+    -fx-background-color : lightgray;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 20px;
+}
+
+.main-button-big {
+    -fx-background-color : lightgray;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 30px;
+}
+
+
 
 .main-button-hover {
     -fx-background-color : #769656;

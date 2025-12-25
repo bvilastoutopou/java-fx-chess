@@ -130,13 +130,13 @@ public class ChessBoard {
                     if(enPassant.getColor().equals("white")){
                         if(lastMove.getRow()==4){
                             key.append((char)('a' +lastMove.getCol()));
-                            key.append(5);
+                            key.append(3);
                             enPassable = true;
                         }
                     }else{
                         if(lastMove.getRow()==3){
                             key.append((char)('a' +lastMove.getCol()));
-                            key.append(2);
+                            key.append(6);
                             enPassable = true;
                         }
                     }
@@ -161,6 +161,12 @@ public class ChessBoard {
             fen += " -";
         }
 
+        return fen;
+    }
+
+    public String validFenGenerator(boolean whitePlays){
+        String fen = getPositionKey(whitePlays);
+        fen += " " + halfMoveCounter + " " + fullMoveCounter;
         return fen;
     }
 
@@ -232,8 +238,6 @@ public class ChessBoard {
         }
 
         if(!enPassantField.equals("-")) {
-            int col = enPassantField.charAt(0) - 'a';
-            int row = 8 - Character.getNumericValue(enPassantField.charAt(1));
             Piece p = getPiece(lastMove);
             p.movesDone = 1;
         }

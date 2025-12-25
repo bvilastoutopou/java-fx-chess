@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane fx:id="gameModeMenu" maxHeight="720.0" maxWidth="1280.0" minHeight="720.0" minWidth="1280.0" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+        <Rectangle fill="#0075e5" height="106.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="1280.0" />
+        <Text fx:id="language" fill="WHITE" layoutX="362.0" layoutY="73.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Choose Game Mode" textAlignment="CENTER">
+            <font>
+                <Font size="48.0" />
+            </font>
+        </Text>
+        <Text fx:id="chess" fill="WHITE" layoutX="1114.0" layoutY="71.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Chess">
+            <font>
+                <Font size="48.0" />
+            </font>
+        </Text>
+        <ImageView fitHeight="64.0" fitWidth="86.0" layoutX="1014.0" layoutY="23.0" pickOnBounds="true" preserveRatio="true">
+            <image>
+                <Image url="@chess-26784_1280.png" />
+            </image>
+        </ImageView>
+        <Text fx:id="back" fill="WHITE" layoutX="69.0" layoutY="68.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Back">
+            <font>
+                <Font size="36.0" />
+            </font>
+        </Text>
+        <ImageView fx:id="backArrow" fitHeight="48.0" fitWidth="47.0" layoutX="22.0" layoutY="30.0" pickOnBounds="true" preserveRatio="true">
+            <image>
+                <Image url="@339876.png" />
+            </image>
+        </ImageView>
+        <ImageView fx:id="darkLightMode" fitHeight="40.0" fitWidth="40.0" layoutX="961.0" layoutY="34.0" pickOnBounds="true" preserveRatio="true">
+            <image>
+                <Image url="@brightness-and-contrast.png" />
+            </image>
+        </ImageView>
+      <Button fx:id="humanButton" layoutX="324.0" layoutY="161.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="265.0" styleClass="main-button-small" stylesheets="@style.css" text="Play against human" textFill="WHITE" />
+      <Button fx:id="aiButton" layoutX="695.0" layoutY="161.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="265.0" styleClass="main-button-small" stylesheets="@style.css" text="Play against AI" textFill="WHITE" />
+      <Button fx:id="classicButton" layoutX="130.0" layoutY="310.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Classic" textFill="WHITE" />
+      <Text layoutX="46.0" layoutY="284.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Timer">
+         <font>
+            <Font size="36.0" />
+         </font>
+      </Text>
+      <Button fx:id="rapidButton" layoutX="400.0" layoutY="310.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Rapid" textFill="WHITE" />
+      <Button fx:id="blitzButton" layoutX="670.0" layoutY="310.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Blitz" textFill="WHITE" />
+      <Button fx:id="bulletButton" layoutX="940.0" layoutY="310.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Bullet" textFill="WHITE" />
+      <Text layoutX="48.0" layoutY="420.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Color">
+         <font>
+            <Font size="36.0" />
+         </font>
+      </Text>
+      <Button fx:id="whiteButton" layoutX="434.0" layoutY="446.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="White" textFill="WHITE" />
+      <Button fx:id="blackButton" layoutX="640.0" layoutY="446.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Black" textFill="WHITE" />
+      <Text layoutX="48.0" layoutY="556.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Difficulty">
+         <font>
+            <Font size="36.0" />
+         </font>
+      </Text>
+      <Button fx:id="easyButton" layoutX="80.0" layoutY="582.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Easy" textFill="WHITE" />
+      <Button fx:id="normalButton" layoutX="310.0" layoutY="582.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Normal" textFill="WHITE" />
+      <Button fx:id="hardButton" layoutX="540.0" layoutY="582.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Hard" textFill="WHITE" />
+      <Button fx:id="harderButton" layoutX="770.0" layoutY="582.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Harder" textFill="WHITE" />
+      <Button fx:id="insaneButton" layoutX="1000.0" layoutY="582.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Insane" textFill="WHITE" />
+      <Button fx:id="easyDemonButton" layoutX="80.0" layoutY="646.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Easy Demon" textFill="WHITE" />
+      <Button fx:id="mediumDemonButton" layoutX="310.0" layoutY="646.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Medium Demon" textFill="WHITE" />
+      <Button fx:id="hardDemonButton" layoutX="540.0" layoutY="646.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Hard Demon" textFill="WHITE" />
+      <Button fx:id="insaneDemonButton" layoutX="770.0" layoutY="646.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Insane Demon" textFill="WHITE" />
+      <Button fx:id="extremeDemonButton" layoutX="1000.0" layoutY="646.0" mnemonicParsing="false" prefHeight="60.0" prefWidth="193.0" styleClass="main-button-gray" stylesheets="@style.css" text="Extreme Demon" textFill="WHITE" />
+      <Button fx:id="resetButoon" layoutX="44.0" layoutY="143.0" mnemonicParsing="false" prefHeight="96.0" prefWidth="265.0" styleClass="cancel-button" stylesheets="@style.css" text="Reset" textFill="WHITE" />
+      <Button fx:id="playButton" layoutX="975.0" layoutY="143.0" mnemonicParsing="false" prefHeight="96.0" prefWidth="265.0" styleClass="main-button-big" stylesheets="@style.css" text="Play" textFill="WHITE" />
+    </children>
+
+</AnchorPane>
