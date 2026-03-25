@@ -31,4 +31,13 @@ public class SquarePair {
         return getRow() == that.getRow() && getCol() == that.getCol();
     }
 
+    public String squarePairToMove(){
+        return "" + (char)('a' + col) + (8 - row);
+    }
+
+    public static SquarePair moveToSquarePair(String move){
+        int col = move.charAt(0) - 'a';
+        int row = 8 - (move.charAt(1) - '0');
+        return new SquarePair(row, col);
+    }
 }

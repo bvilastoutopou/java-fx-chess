@@ -1,6 +1,7 @@
 package com.example.chess;
 
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -12,21 +13,23 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class ChessController {
@@ -46,6 +49,9 @@ public class ChessController {
     private Timeline blackTimeline;
     private ResourceBundle bundle;
 
+
+
+
     private String checkmateColor;
     private String checkColor;
     private String selectionColor;
@@ -53,8 +59,12 @@ public class ChessController {
     private String allowedColor;
     private String specialColor;
     private String captureColor;
+    private String lastMoveColor;
     boolean resetTimers;
-
+    @FXML
+    AnchorPane mainGame;
+    @FXML
+    ImageView darkLightMode;
     @FXML
     private Text playingText;
     private boolean gameOver = false;
@@ -78,6 +88,20 @@ public class ChessController {
     Text blackTime;
     @FXML
     Text whiteTime;
+    @FXML
+    Button undoButton;
+    @FXML
+    Button redoButton;
+    @FXML
+    Rectangle blackTimeBox;
+    @FXML
+    Rectangle whiteTimeBox;
+
+    boolean pvpMode = false;
+    Stockfish stockfish;
+    int difficulty = 0;
+
+    String aiColor = "black";
 
     private String whiteWinsSound = getClass().getResource("/com/example/chess/sounds/whiteWins.mp3").toExternalForm();
 
@@ -93,9 +117,7 @@ public class ChessController {
     }
 
     @FXML
-    public void initialize() throws FileNotFoundException {
-        String key = chessBoard.getPositionKey(whitePlays);
-        chessBoard.getRepetitionTable().put(key, 1);
+    public void initialize() throws IOException {
         gameOver = false;
         String fen = SettingsManager.get("FEN");
         chessBoard.fenLoader(fen);
@@ -108,7 +130,29 @@ public class ChessController {
         whitePlays = fenParts[1].equals("w");
         Language.setLocale(SettingsManager.get("language"));
         bundle = Language.getBundle();
-
+        String isDarkModeOn = SettingsManager.get("dark.mode");
+        if(isDarkModeOn.equals("on")){
+            mainGame.setStyle("-fx-background-color: #1A1A2E");
+            drawButton.getStyleClass().add("white-button-dark");
+            newGameButton.getStyleClass().add("white-button-dark");
+            undoButton.getStyleClass().add("white-button-undo-redo-dark");
+            redoButton.getStyleClass().add("white-button-undo-redo-dark");
+            blackTimeBox.setFill(Color.BLACK);
+            whiteTimeBox.setFill(Color.BLACK);
+            whiteTime.setStyle("-fx-fill: white");
+            blackTime.setStyle("-fx-fill: white");
+        }
+        else{
+            mainGame.setStyle("-fx-background-color: white");
+            drawButton.getStyleClass().remove("white-button-dark");
+            newGameButton.getStyleClass().remove("white-button-dark");
+            undoButton.getStyleClass().remove("white-button-undo-redo-dark");
+            redoButton.getStyleClass().remove("white-button-undo-redo-dark");
+            blackTimeBox.setFill(Color.WHITE);
+            whiteTimeBox.setFill(Color.WHITE);
+            whiteTime.setStyle("-fx-fill: black");
+            blackTime.setStyle("-fx-fill: black");
+        }
         applyLanguage();
         if(whitePlays){
             playingText.setText(bundle.getString("status.whiteplays"));
@@ -119,6 +163,30 @@ public class ChessController {
         draw();
         fillBoard();
         backArrowHandler();
+        undo();
+        redo();
+        switchDarkLightMode();
+        if(!pvpMode){
+            InputStream is = getClass().getResourceAsStream("/com/example/chess/stockfish/stockfish-windows-x86-64-avx2.exe");
+            if (is == null) throw new FileNotFoundException("Stockfish not found in resources");
+
+            File tempFile = File.createTempFile("stockfish", ".exe");
+            tempFile.deleteOnExit();
+
+            try (FileOutputStream os = new FileOutputStream(tempFile)) {
+                byte[] buffer = new byte[1024];
+                int read;
+                while ((read = ((java.io.InputStream) is).read(buffer)) != -1) {
+                    os.write(buffer, 0, read);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            String path = tempFile.getAbsolutePath();
+            stockfish = new Stockfish(path);
+            stockfish.startEngine();
+        }
         try {
             loadPieces();
         } catch (FileNotFoundException e) {
@@ -188,6 +256,54 @@ public class ChessController {
                 startBlackTimer();
             }
         }
+        String colorPlaying;
+        if(whitePlays){
+            colorPlaying = "white";
+        }
+        else{
+            colorPlaying = "black";
+        }
+        if(!pvpMode && aiColor.equals(colorPlaying)) {
+            SquarePair whiteKingPos = chessBoard.findKing("white");
+            SquarePair blackKingPos = chessBoard.findKing("black");
+            WhiteKing whiteKing = (WhiteKing) chessBoard.getPiece(whiteKingPos);
+            BlackKing blackKing = (BlackKing) chessBoard.getPiece(blackKingPos);
+            String FEN = chessBoard.validFenGenerator(whitePlays);
+
+            new Thread(() -> {
+                String aiMove = stockfish.getBestMove(FEN, difficulty, 5000);
+                if (aiMove == null || aiMove.equals("0000")) return;
+
+                SquarePair originSquare = SquarePair.moveToSquarePair(aiMove.substring(0, 2));
+                SquarePair destinationSquare = SquarePair.moveToSquarePair(aiMove.substring(2, 4));
+
+                Platform.runLater(() -> {
+                    try {
+                        chessBoard.getPiece(originSquare).moveAi(chessBoard, destinationSquare, squares);
+                        whitePlays = !whitePlays;
+                        changeTurn();
+                        if(gameOver)return;
+                        for (int row = 0; row < SIZE; row++) {
+                            for (int col = 0; col < SIZE; col++) {
+                                changeBorderColor(null, new SquarePair(row, col));
+                            }
+                        }
+                        if (whiteKing.isChecked(chessBoard)) {
+                            changeBorderColor(checkColor, whiteKingPos);
+                        } else {
+                            changeBorderColor(null, whiteKingPos);
+                        }
+                        if (blackKing.isChecked(chessBoard)) {
+                            changeBorderColor(checkColor, blackKingPos);
+                        } else {
+                            changeBorderColor(null, blackKingPos);
+                        }
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                });
+            }).start();
+        }
     }
 
     private int getTheme() {
@@ -208,6 +324,7 @@ public class ChessController {
             allowedColor = "green";
             specialColor = "purple";
             captureColor = "red";
+            lastMoveColor = "lightblue";
         }else if(theme ==1){
             lightColor = "#EEEED2";
             darkColor = "#769656";
@@ -218,6 +335,7 @@ public class ChessController {
             allowedColor = "blue";
             specialColor = "purple";
             captureColor = "red";
+            lastMoveColor = "lightgreen";
         }else if(theme ==2){
             lightColor = "#F0D9B5";
             darkColor = "#B58863";
@@ -228,6 +346,7 @@ public class ChessController {
             allowedColor = "green";
             specialColor = "blue";
             captureColor = "red";
+            lastMoveColor = "sienna";
         }
         else if(theme ==3){
             lightColor = "#E0E0FF";
@@ -239,6 +358,7 @@ public class ChessController {
             allowedColor = "lightgreen";
             specialColor = "purple";
             captureColor = "red";
+            lastMoveColor = "lightblue";
         }
         else if(theme ==4){
             lightColor = "#DFF7F6";
@@ -250,6 +370,7 @@ public class ChessController {
             allowedColor = "darkblue";
             specialColor = "purple";
             captureColor = "red";
+            lastMoveColor = "lightblue";
         }
         else if(theme ==5){
             lightColor = "#FFE4F0";
@@ -261,6 +382,7 @@ public class ChessController {
             allowedColor = "green";
             specialColor = "darkblue";
             captureColor = "red";
+            lastMoveColor = "orchid";
         }
         else if(theme ==6){
             lightColor = "#FFE7D9";
@@ -272,6 +394,7 @@ public class ChessController {
             allowedColor = "green";
             specialColor = "purple";
             captureColor = "red";
+            lastMoveColor = "coral";
         }
         else{
             lightColor = "#FDE3E3";
@@ -283,6 +406,7 @@ public class ChessController {
             allowedColor = "lightgreen";
             specialColor = "lightblue";
             captureColor = "red";
+            lastMoveColor = "salmon";
         }
     }
 
@@ -355,7 +479,7 @@ public class ChessController {
         }
         if(!gameOver){
             String key = chessBoard.getPositionKey(whitePlays);
-            if(chessBoard.getHalfMoveCounter()>=100 || chessBoard.determineInsufficientMaterial() || chessBoard.getRepetitionTable().get(key)>=3){
+            if(chessBoard.getHalfMoveCounter()>=100 || chessBoard.determineInsufficientMaterial() || (chessBoard.getRepetitionTable().get(key)!=null && chessBoard.getRepetitionTable().get(key)>=3)){
                 Media drawSoundMedia = new Media(drawSound);
                 MediaPlayer drawSoundMediaPlayer = new MediaPlayer(drawSoundMedia);
                 stopTimers();
@@ -394,7 +518,11 @@ public class ChessController {
                 else{
                     color = darkColor;
                 }
-                square.setStyle("-fx-background-color: " + color);
+                if(chessBoard.getLastMove()!=null && (chessBoard.getLastMove().equals(pair) || chessBoard.getLastMoveOrigin().equals(pair))){
+                    square.setStyle("-fx-background-color: " + lastMoveColor);
+                }else {
+                    square.setStyle("-fx-background-color: " + color);
+                }
                 addHover(square,color,pair);
                 clickHandler(square,pair);
                 squares[row][col] = square;
@@ -430,7 +558,7 @@ public class ChessController {
     private void addHover(Pane square,String color,SquarePair pair){
         square.setOnMouseEntered(event -> {
             if(!gameOver) {
-                if (!pair.equals(selectedSquare) && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: "+  allowedColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: "+ captureColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: " + specialColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: "+checkColor+"; -fx-border-width:2")) {
+                if (!pair.equals(selectedSquare) && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: "+  allowedColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: "+ captureColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: " + specialColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: "+checkColor+"; -fx-border-width:2")    &&  !square.getStyle().equals("-fx-background-color: " + lastMoveColor + "; -fx-border-color: "+  allowedColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + lastMoveColor + "; -fx-border-color: "+ captureColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + lastMoveColor + "; -fx-border-color: " + specialColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + lastMoveColor + "; -fx-border-color: "+checkColor+"; -fx-border-width:2")) {
                     changeBorderColor(hoverColor, pair);
                 }
             }
@@ -438,7 +566,7 @@ public class ChessController {
 
         square.setOnMouseExited(event -> {
             if(!gameOver) {
-                if (!pair.equals(selectedSquare) && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: "+  allowedColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: "+ captureColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: " + specialColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: "+checkColor+"; -fx-border-width:2")) {
+                if (!pair.equals(selectedSquare) && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: "+  allowedColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: "+ captureColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: " + specialColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + color + "; -fx-border-color: "+checkColor+"; -fx-border-width:2")     && !square.getStyle().equals("-fx-background-color: " + lastMoveColor + "; -fx-border-color: "+  allowedColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + lastMoveColor + "; -fx-border-color: "+ captureColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + lastMoveColor + "; -fx-border-color: " + specialColor +"; -fx-border-width:2") && !square.getStyle().equals("-fx-background-color: " + lastMoveColor + "; -fx-border-color: "+checkColor+"; -fx-border-width:2")) {
                     changeBorderColor(null,pair);
                 }
             }
@@ -518,16 +646,26 @@ public class ChessController {
         int col = pair.getCol();
         boolean isLight = (row+col)%2 == 0;
         String backgroundColor;
+        SquarePair lastMove = chessBoard.getLastMove();
+        SquarePair lastMoveOrigin = chessBoard.getLastMoveOrigin();
         if(isLight){
             backgroundColor = lightColor;
         }
         else{
             backgroundColor = darkColor;
         }
-        if(color!=null) {
-            squares[row][col].setStyle("-fx-background-color: " + backgroundColor + "; -fx-border-color: " + color + "; -fx-border-width:2");
-        }else{
-            squares[row][col].setStyle("-fx-background-color: " + backgroundColor + ";");
+        if(pair.equals(lastMove) || pair.equals(lastMoveOrigin)){
+            if(color!=null) {
+                squares[row][col].setStyle("-fx-background-color: " + lastMoveColor + "; -fx-border-color: " + color + "; -fx-border-width:2");
+            }else{
+                squares[row][col].setStyle("-fx-background-color: " + lastMoveColor + ";");
+            }
+        }else {
+            if (color != null) {
+                squares[row][col].setStyle("-fx-background-color: " + backgroundColor + "; -fx-border-color: " + color + "; -fx-border-width:2");
+            } else {
+                squares[row][col].setStyle("-fx-background-color: " + backgroundColor + ";");
+            }
         }
     }
 
@@ -535,24 +673,24 @@ public class ChessController {
     private void clickHandler(Pane square,SquarePair pair){
         square.setOnMouseClicked(event -> {
             if(!gameOver) {
-                SquarePair whiteKingPos = chessBoard.findKing("white");
-                SquarePair blackKingPos = chessBoard.findKing("black");
-                WhiteKing whiteKing = (WhiteKing) chessBoard.getPiece(whiteKingPos);
-                BlackKing blackKing = (BlackKing) chessBoard.getPiece(blackKingPos);
+                AtomicReference<SquarePair> whiteKingPos = new AtomicReference<>(chessBoard.findKing("white"));
+                AtomicReference<SquarePair> blackKingPos = new AtomicReference<>(chessBoard.findKing("black"));
+                AtomicReference<WhiteKing> whiteKing = new AtomicReference<>((WhiteKing) chessBoard.getPiece(whiteKingPos.get()));
+                AtomicReference<BlackKing> blackKing = new AtomicReference<>((BlackKing) chessBoard.getPiece(blackKingPos.get()));
                 try {
-                    if (whiteKing.isChecked(chessBoard)) {
-                        changeBorderColor(checkColor, whiteKingPos);
+                    if (whiteKing.get().isChecked(chessBoard)) {
+                        changeBorderColor(checkColor, whiteKingPos.get());
                     } else {
-                        changeBorderColor(null, whiteKingPos);
+                        changeBorderColor(null, whiteKingPos.get());
                     }
                 } catch (FileNotFoundException e) {
                     throw new RuntimeException(e);
                 }
                 try {
-                    if (blackKing.isChecked(chessBoard)) {
-                        changeBorderColor(checkColor, blackKingPos);
+                    if (blackKing.get().isChecked(chessBoard)) {
+                        changeBorderColor(checkColor, blackKingPos.get());
                     } else {
-                        changeBorderColor(null, blackKingPos);
+                        changeBorderColor(null, blackKingPos.get());
                     }
                 } catch (FileNotFoundException e) {
                     throw new RuntimeException(e);
@@ -561,15 +699,17 @@ public class ChessController {
                 if (!pair.equals(selectedSquare) && selectedSquare != null) {
                     changeBorderColor(null, selectedSquare);
                     Piece oldPiece = chessBoard.getPiece(selectedSquare);
-                    for (SquarePair squarePair : new ArrayList<>(oldPiece.allowedMoves)) {
-                        changeBorderColor(null, squarePair);
-                    }
-                    for (SquarePair squarePair : new ArrayList<>(oldPiece.specialMoves)) {
-                        changeBorderColor(null, squarePair);
+                    if(oldPiece!=null) {
+                        for (SquarePair squarePair : new ArrayList<>(oldPiece.allowedMoves)) {
+                            changeBorderColor(null, squarePair);
+                        }
+                        for (SquarePair squarePair : new ArrayList<>(oldPiece.specialMoves)) {
+                            changeBorderColor(null, squarePair);
 
+                        }
                     }
                     try {
-                        if (chessBoard.getPiece(selectedSquare).move(chessBoard, pair, squares)) {
+                        if ( chessBoard.getPiece(selectedSquare)!=null && chessBoard.getPiece(selectedSquare).move(chessBoard, pair, squares)) {
                             whitePlays = !whitePlays;
                             changeTurn();
                             if(gameOver)return;
@@ -578,35 +718,78 @@ public class ChessController {
                                     changeBorderColor(null, new SquarePair(row, col));
                                 }
                             }
-                            if (whiteKing.isChecked(chessBoard)) {
-                                changeBorderColor(checkColor, whiteKingPos);
+                            if (whiteKing.get().isChecked(chessBoard)) {
+                                changeBorderColor(checkColor, whiteKingPos.get());
                             } else {
-                                changeBorderColor(null, whiteKingPos);
+                                changeBorderColor(null, whiteKingPos.get());
                             }
-                            if (blackKing.isChecked(chessBoard)) {
-                                changeBorderColor(checkColor, blackKingPos);
+                            if (blackKing.get().isChecked(chessBoard)) {
+                                changeBorderColor(checkColor, blackKingPos.get());
                             } else {
-                                changeBorderColor(null, blackKingPos);
+                                changeBorderColor(null, blackKingPos.get());
                             }
+                            if(!pvpMode) {
+                                String fen = chessBoard.validFenGenerator(whitePlays);
+
+                                new Thread(() -> {
+                                    String aiMove = stockfish.getBestMove(fen, difficulty, 5000);
+                                    if (aiMove == null || aiMove.equals("0000")) return;
+
+                                    SquarePair originSquare = SquarePair.moveToSquarePair(aiMove.substring(0, 2));
+                                    SquarePair destinationSquare = SquarePair.moveToSquarePair(aiMove.substring(2, 4));
+
+                                    Platform.runLater(() -> {
+                                        try {
+                                            chessBoard.getPiece(originSquare).moveAi(chessBoard, destinationSquare, squares);
+                                            whitePlays = !whitePlays;
+                                            changeTurn();
+                                            if(gameOver)return;
+                                            for (int row = 0; row < SIZE; row++) {
+                                                for (int col = 0; col < SIZE; col++) {
+                                                    changeBorderColor(null, new SquarePair(row, col));
+                                                }
+                                            }
+                                            whiteKingPos.set(chessBoard.findKing("white"));
+                                            blackKingPos.set(chessBoard.findKing("black"));
+                                            whiteKing.set((WhiteKing) chessBoard.getPiece(whiteKingPos.get()));
+                                            blackKing.set((BlackKing) chessBoard.getPiece(blackKingPos.get()));
+                                            if (whiteKing.get().isChecked(chessBoard)) {
+                                                changeBorderColor(checkColor, whiteKingPos.get());
+                                            } else {
+                                                changeBorderColor(null, whiteKingPos.get());
+                                            }
+                                            if (blackKing.get().isChecked(chessBoard)) {
+                                                changeBorderColor(checkColor, blackKingPos.get());
+                                            } else {
+                                                changeBorderColor(null, blackKingPos.get());
+                                            }
+                                        } catch (FileNotFoundException e) {
+                                            e.printStackTrace();
+                                        }
+                                    });
+                                }).start();
+                            }
+
+
                         }
                     } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
                     }
                     selectedSquare = null;
                     try {
-                        if (whiteKing.isChecked(chessBoard)) {
-                            changeBorderColor(checkColor, whiteKingPos);
+                        if (whiteKing.get().isChecked(chessBoard)) {
+                            changeBorderColor(checkColor, whiteKingPos.get());
                         } else {
-                            changeBorderColor(null, whiteKingPos);
+                            changeBorderColor(null, whiteKingPos.get());
                         }
                     } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
                     }
                     try {
-                        if (blackKing.isChecked(chessBoard)) {
-                            changeBorderColor(checkColor, blackKingPos);
+                        if (blackKing.get().isChecked(chessBoard)) {
+                            changeBorderColor(checkColor, blackKingPos.get());
                         } else {
-                            changeBorderColor(null, blackKingPos);
+                            changeBorderColor(null, blackKingPos.get());
                         }
                     } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
@@ -615,6 +798,11 @@ public class ChessController {
                 }
                 if (whitePlays) {
                     if (selectedPiece != null && !selectedPiece.getColor().equals("black")) {
+                        if(!pvpMode){
+                            if(aiColor.equals("white")){
+                                return;
+                            }
+                        }
                         selectedSquare = pair;
                         changeBorderColor(selectionColor, selectedSquare);
                         try {
@@ -638,6 +826,11 @@ public class ChessController {
 
                 } else {
                     if (selectedPiece != null && !selectedPiece.getColor().equals("white")) {
+                        if(!pvpMode){
+                            if(aiColor.equals("black")){
+                                return;
+                            }
+                        }
                         selectedSquare = pair;
                         changeBorderColor(selectionColor, selectedSquare);
                         try {
@@ -675,6 +868,8 @@ public class ChessController {
             squares = new Pane[SIZE][SIZE];
             whitePlays = true;
             gameOver = false;
+            chessBoard.setLastMoveOrigin(null);
+            chessBoard.setLastMove(null);
             playingText.setText(bundle.getString("status.whiteplays"));
             SettingsManager.set("FEN","rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             try {
@@ -684,17 +879,202 @@ public class ChessController {
             }
             try {
                 initialize();
-            } catch (FileNotFoundException e) {
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });
 
         newGameButton.setOnMouseEntered(event -> {
-            newGameButton.getStyleClass().add("gray-button");
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                newGameButton.getStyleClass().add("gray-button-dark");
+            }else {
+                newGameButton.getStyleClass().add("gray-button");
+            }
         });
 
         newGameButton.setOnMouseExited(event -> {
-            newGameButton.getStyleClass().remove("gray-button");
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                newGameButton.getStyleClass().remove("gray-button-dark");
+            }else {
+                newGameButton.getStyleClass().remove("gray-button");
+            }
+        });
+    }
+
+    public void undo(){
+        undoButton.setOnMouseClicked(event -> {
+            if (!chessBoard.undoStack.isEmpty()) {
+                if (!chessBoard.repetitionUndoStack.isEmpty()) {
+                    selectedSquare = null;
+                    String key = chessBoard.repetitionUndoStack.pop();
+                    chessBoard.repetitionRedoStack.push(key);
+                    int count = chessBoard.getRepetitionTable().getOrDefault(key, 0) - 1;
+                    if (count <= 0) {
+                        chessBoard.getRepetitionTable().remove(key);
+                    } else {
+                        chessBoard.getRepetitionTable().put(key, count);
+                    }
+                }
+                String lastFEN = chessBoard.undoStack.pop();
+                chessBoard.redoStack.push(chessBoard.fenGenerator(whitePlays));
+                try {
+                    chessBoard.fenLoader(lastFEN);
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                if(lastFEN.startsWith("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")){
+                    chessBoard.setLastMove(null);
+                    chessBoard.setLastMoveOrigin(null);
+                }
+                fillBoard();
+                try {
+                    loadPieces();
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    changeTurn();
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                gameOver = false;
+                SquarePair whiteKingPos = chessBoard.findKing("white");
+                SquarePair blackKingPos = chessBoard.findKing("black");
+                WhiteKing whiteKing = (WhiteKing) chessBoard.getPiece(whiteKingPos);
+                BlackKing blackKing = (BlackKing) chessBoard.getPiece(blackKingPos);
+                whitePlays = !whitePlays;
+                try {
+                    changeTurn();
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                if(gameOver)return;
+                for (int row = 0; row < SIZE; row++) {
+                    for (int col = 0; col < SIZE; col++) {
+                        changeBorderColor(null, new SquarePair(row, col));
+                    }
+                }
+                try {
+                    if (whiteKing.isChecked(chessBoard)) {
+                        changeBorderColor(checkColor, whiteKingPos);
+                    } else {
+                        changeBorderColor(null, whiteKingPos);
+                    }
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    if (blackKing.isChecked(chessBoard)) {
+                        changeBorderColor(checkColor, blackKingPos);
+                    } else {
+                        changeBorderColor(null, blackKingPos);
+                    }
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
+
+        undoButton.setOnMouseEntered(event -> {
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                undoButton.getStyleClass().add("gray-button-undo-redo-dark");
+            }else {
+                undoButton.getStyleClass().add("gray-button-undo-redo");
+            }
+        });
+
+        undoButton.setOnMouseExited(event -> {
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                undoButton.getStyleClass().remove("gray-button-undo-redo-dark");
+            }else {
+                undoButton.getStyleClass().remove("gray-button-undo-redo");
+            }
+        });
+    }
+
+    public void redo() throws FileNotFoundException {
+        redoButton.setOnMouseClicked(event -> {
+            if(!chessBoard.redoStack.isEmpty()){
+                if (!chessBoard.repetitionRedoStack.isEmpty()) {
+                    selectedSquare = null;
+                    String key = chessBoard.repetitionRedoStack.pop();
+                    chessBoard.repetitionUndoStack.push(key);
+
+                    chessBoard.getRepetitionTable()
+                            .put(key, chessBoard.getRepetitionTable().getOrDefault(key, 0) + 1);
+                }
+
+                String lastFEN = chessBoard.redoStack.pop();
+                chessBoard.undoStack.push(chessBoard.fenGenerator(whitePlays));
+                try {
+                    chessBoard.fenLoader(lastFEN);
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                fillBoard();
+                try {
+                    loadPieces();
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                SquarePair whiteKingPos = chessBoard.findKing("white");
+                SquarePair blackKingPos = chessBoard.findKing("black");
+                WhiteKing whiteKing = (WhiteKing) chessBoard.getPiece(whiteKingPos);
+                BlackKing blackKing = (BlackKing) chessBoard.getPiece(blackKingPos);
+                whitePlays = !whitePlays;
+                try {
+                    changeTurn();
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                if(gameOver)return;
+                for (int row = 0; row < SIZE; row++) {
+                    for (int col = 0; col < SIZE; col++) {
+                        changeBorderColor(null, new SquarePair(row, col));
+                    }
+                }
+                try {
+                    if (whiteKing.isChecked(chessBoard)) {
+                        changeBorderColor(checkColor, whiteKingPos);
+                    } else {
+                        changeBorderColor(null, whiteKingPos);
+                    }
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    if (blackKing.isChecked(chessBoard)) {
+                        changeBorderColor(checkColor, blackKingPos);
+                    } else {
+                        changeBorderColor(null, blackKingPos);
+                    }
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        redoButton.setOnMouseEntered(event -> {
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                redoButton.getStyleClass().add("gray-button-undo-redo-dark");
+            }else {
+                redoButton.getStyleClass().add("gray-button-undo-redo");
+            }
+        });
+
+        redoButton.setOnMouseExited(event -> {
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                redoButton.getStyleClass().remove("gray-button-undo-redo-dark");
+            }else {
+                redoButton.getStyleClass().remove("gray-button-undo-redo");
+            }
         });
     }
 
@@ -707,6 +1087,8 @@ public class ChessController {
         drawButton.setText(bundle.getString("button.draw"));
         newGameButton.setText(bundle.getString("button.newgame"));
         playingText.setText(bundle.getString("status.whiteplays"));
+        undoButton.setText(bundle.getString("button.undo"));
+        redoButton.setText(bundle.getString("button.redo"));
     }
 
     public void draw(){
@@ -722,11 +1104,21 @@ public class ChessController {
         });
 
         drawButton.setOnMouseEntered(event -> {
-            drawButton.getStyleClass().add("gray-button");
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                drawButton.getStyleClass().add("gray-button-dark");
+            }else {
+                drawButton.getStyleClass().add("gray-button");
+            }
         });
 
         drawButton.setOnMouseExited(event -> {
-            drawButton.getStyleClass().remove("gray-button");
+            String darkMode = SettingsManager.get("dark.mode");
+            if(darkMode.equals("on")){
+                drawButton.getStyleClass().remove("gray-button-dark");
+            }else {
+                drawButton.getStyleClass().remove("gray-button");
+            }
         });
     }
 
@@ -854,5 +1246,34 @@ public class ChessController {
         stage.setScene(scene);
     }
 
+    public void switchDarkLightMode(){
+        darkLightMode.setOnMouseClicked(event -> {
+            String isDarkModeOn = SettingsManager.get("dark.mode");
+            if(isDarkModeOn.equals("off")){
+                SettingsManager.set("dark.mode","on");
+                mainGame.setStyle("-fx-background-color: #1A1A2E");
+                drawButton.getStyleClass().add("white-button-dark");
+                newGameButton.getStyleClass().add("white-button-dark");
+                undoButton.getStyleClass().add("white-button-undo-redo-dark");
+                redoButton.getStyleClass().add("white-button-undo-redo-dark");
+                blackTimeBox.setFill(Color.BLACK);
+                whiteTimeBox.setFill(Color.BLACK);
+                whiteTime.setStyle("-fx-fill: white");
+                blackTime.setStyle("-fx-fill: white");
+            }
+            else{
+                mainGame.setStyle("-fx-background-color: white");
+                SettingsManager.set("dark.mode","off");
+                drawButton.getStyleClass().remove("white-button-dark");
+                newGameButton.getStyleClass().remove("white-button-dark");
+                undoButton.getStyleClass().remove("white-button-undo-redo-dark");
+                redoButton.getStyleClass().remove("white-button-undo-redo-dark");
+                blackTimeBox.setFill(Color.WHITE);
+                whiteTimeBox.setFill(Color.WHITE);
+                whiteTime.setStyle("-fx-fill: black");
+                blackTime.setStyle("-fx-fill: black");
+            }
+        });
+    }
 
 }

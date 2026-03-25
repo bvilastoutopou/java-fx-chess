@@ -5,6 +5,28 @@
     -fx-font-size: 30px;
 }
 
+.main-button-small {
+    -fx-background-color : #0075E5;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 20px;
+}
+
+.main-button-gray {
+    -fx-background-color : lightgray;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 20px;
+}
+
+.main-button-big {
+    -fx-background-color : lightgray;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 30px;
+}
+
+
 
 .main-button-hover {
     -fx-background-color : #769656;
@@ -62,6 +84,20 @@
     -fx-font-size: 24px;
 }
 
+.white-button-undo-redo {
+    -fx-background-color : white;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+}
+
+.gray-button-undo-redo {
+    -fx-background-color : lightgray;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+}
+
 .gray-button {
     -fx-background-color : lightgray;
     -fx-background-radius: 15;
@@ -69,3 +105,40 @@
     -fx-font-size: 24px;
 }
 
+
+
+.dark-mode-on{
+    -fx-background-color: #1A1A2E;
+}
+
+.white-button-dark {
+    -fx-text-fill : white;
+    -fx-background-color : black;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 24px;
+}
+
+.white-button-undo-redo-dark {
+    -fx-text-fill : white;
+    -fx-background-color : black;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+}
+
+.gray-button-undo-redo-dark {
+    -fx-text-fill : white;
+    -fx-background-color : navy;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+}
+
+.gray-button-dark {
+    -fx-text-fill : white;
+    -fx-background-color : navy;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 24px;
+}
