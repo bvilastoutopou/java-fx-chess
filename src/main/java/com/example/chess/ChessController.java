@@ -1,7 +1,6 @@
 package com.example.chess;
 
 import javafx.animation.Timeline;
-import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -26,10 +25,13 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Set;
+import java.util.Stack;
 
 
 public class ChessController {
@@ -96,13 +98,6 @@ public class ChessController {
     Rectangle blackTimeBox;
     @FXML
     Rectangle whiteTimeBox;
-
-    boolean pvpMode = false;
-    Stockfish stockfish;
-    int difficulty = 0;
-
-    String aiColor = "black";
-
     private String whiteWinsSound = getClass().getResource("/com/example/chess/sounds/whiteWins.mp3").toExternalForm();
 
     private String blackWinsSound = getClass().getResource("/com/example/chess/sounds/blackWins.mp3").toExternalForm();
@@ -117,7 +112,7 @@ public class ChessController {
     }
 
     @FXML
-    public void initialize() throws IOException {
+    public void initialize() throws FileNotFoundException {
         gameOver = false;
         String fen = SettingsManager.get("FEN");
         chessBoard.fenLoader(fen);
@@ -166,27 +161,6 @@ public class ChessController {
         undo();
         redo();
         switchDarkLightMode();
-        if(!pvpMode){
-            InputStream is = getClass().getResourceAsStream("/com/example/chess/stockfish/stockfish-windows-x86-64-avx2.exe");
-            if (is == null) throw new FileNotFoundException("Stockfish not found in resources");
-
-            File tempFile = File.createTempFile("stockfish", ".exe");
-            tempFile.deleteOnExit();
-
-            try (FileOutputStream os = new FileOutputStream(tempFile)) {
-                byte[] buffer = new byte[1024];
-                int read;
-                while ((read = ((java.io.InputStream) is).read(buffer)) != -1) {
-                    os.write(buffer, 0, read);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            String path = tempFile.getAbsolutePath();
-            stockfish = new Stockfish(path);
-            stockfish.startEngine();
-        }
         try {
             loadPieces();
         } catch (FileNotFoundException e) {
@@ -255,54 +229,6 @@ public class ChessController {
             }else{
                 startBlackTimer();
             }
-        }
-        String colorPlaying;
-        if(whitePlays){
-            colorPlaying = "white";
-        }
-        else{
-            colorPlaying = "black";
-        }
-        if(!pvpMode && aiColor.equals(colorPlaying)) {
-            SquarePair whiteKingPos = chessBoard.findKing("white");
-            SquarePair blackKingPos = chessBoard.findKing("black");
-            WhiteKing whiteKing = (WhiteKing) chessBoard.getPiece(whiteKingPos);
-            BlackKing blackKing = (BlackKing) chessBoard.getPiece(blackKingPos);
-            String FEN = chessBoard.validFenGenerator(whitePlays);
-
-            new Thread(() -> {
-                String aiMove = stockfish.getBestMove(FEN, difficulty, 5000);
-                if (aiMove == null || aiMove.equals("0000")) return;
-
-                SquarePair originSquare = SquarePair.moveToSquarePair(aiMove.substring(0, 2));
-                SquarePair destinationSquare = SquarePair.moveToSquarePair(aiMove.substring(2, 4));
-
-                Platform.runLater(() -> {
-                    try {
-                        chessBoard.getPiece(originSquare).moveAi(chessBoard, destinationSquare, squares);
-                        whitePlays = !whitePlays;
-                        changeTurn();
-                        if(gameOver)return;
-                        for (int row = 0; row < SIZE; row++) {
-                            for (int col = 0; col < SIZE; col++) {
-                                changeBorderColor(null, new SquarePair(row, col));
-                            }
-                        }
-                        if (whiteKing.isChecked(chessBoard)) {
-                            changeBorderColor(checkColor, whiteKingPos);
-                        } else {
-                            changeBorderColor(null, whiteKingPos);
-                        }
-                        if (blackKing.isChecked(chessBoard)) {
-                            changeBorderColor(checkColor, blackKingPos);
-                        } else {
-                            changeBorderColor(null, blackKingPos);
-                        }
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                });
-            }).start();
         }
     }
 
@@ -673,24 +599,24 @@ public class ChessController {
     private void clickHandler(Pane square,SquarePair pair){
         square.setOnMouseClicked(event -> {
             if(!gameOver) {
-                AtomicReference<SquarePair> whiteKingPos = new AtomicReference<>(chessBoard.findKing("white"));
-                AtomicReference<SquarePair> blackKingPos = new AtomicReference<>(chessBoard.findKing("black"));
-                AtomicReference<WhiteKing> whiteKing = new AtomicReference<>((WhiteKing) chessBoard.getPiece(whiteKingPos.get()));
-                AtomicReference<BlackKing> blackKing = new AtomicReference<>((BlackKing) chessBoard.getPiece(blackKingPos.get()));
+                SquarePair whiteKingPos = chessBoard.findKing("white");
+                SquarePair blackKingPos = chessBoard.findKing("black");
+                WhiteKing whiteKing = (WhiteKing) chessBoard.getPiece(whiteKingPos);
+                BlackKing blackKing = (BlackKing) chessBoard.getPiece(blackKingPos);
                 try {
-                    if (whiteKing.get().isChecked(chessBoard)) {
-                        changeBorderColor(checkColor, whiteKingPos.get());
+                    if (whiteKing.isChecked(chessBoard)) {
+                        changeBorderColor(checkColor, whiteKingPos);
                     } else {
-                        changeBorderColor(null, whiteKingPos.get());
+                        changeBorderColor(null, whiteKingPos);
                     }
                 } catch (FileNotFoundException e) {
                     throw new RuntimeException(e);
                 }
                 try {
-                    if (blackKing.get().isChecked(chessBoard)) {
-                        changeBorderColor(checkColor, blackKingPos.get());
+                    if (blackKing.isChecked(chessBoard)) {
+                        changeBorderColor(checkColor, blackKingPos);
                     } else {
-                        changeBorderColor(null, blackKingPos.get());
+                        changeBorderColor(null, blackKingPos);
                     }
                 } catch (FileNotFoundException e) {
                     throw new RuntimeException(e);
@@ -718,78 +644,35 @@ public class ChessController {
                                     changeBorderColor(null, new SquarePair(row, col));
                                 }
                             }
-                            if (whiteKing.get().isChecked(chessBoard)) {
-                                changeBorderColor(checkColor, whiteKingPos.get());
+                            if (whiteKing.isChecked(chessBoard)) {
+                                changeBorderColor(checkColor, whiteKingPos);
                             } else {
-                                changeBorderColor(null, whiteKingPos.get());
+                                changeBorderColor(null, whiteKingPos);
                             }
-                            if (blackKing.get().isChecked(chessBoard)) {
-                                changeBorderColor(checkColor, blackKingPos.get());
+                            if (blackKing.isChecked(chessBoard)) {
+                                changeBorderColor(checkColor, blackKingPos);
                             } else {
-                                changeBorderColor(null, blackKingPos.get());
+                                changeBorderColor(null, blackKingPos);
                             }
-                            if(!pvpMode) {
-                                String fen = chessBoard.validFenGenerator(whitePlays);
-
-                                new Thread(() -> {
-                                    String aiMove = stockfish.getBestMove(fen, difficulty, 5000);
-                                    if (aiMove == null || aiMove.equals("0000")) return;
-
-                                    SquarePair originSquare = SquarePair.moveToSquarePair(aiMove.substring(0, 2));
-                                    SquarePair destinationSquare = SquarePair.moveToSquarePair(aiMove.substring(2, 4));
-
-                                    Platform.runLater(() -> {
-                                        try {
-                                            chessBoard.getPiece(originSquare).moveAi(chessBoard, destinationSquare, squares);
-                                            whitePlays = !whitePlays;
-                                            changeTurn();
-                                            if(gameOver)return;
-                                            for (int row = 0; row < SIZE; row++) {
-                                                for (int col = 0; col < SIZE; col++) {
-                                                    changeBorderColor(null, new SquarePair(row, col));
-                                                }
-                                            }
-                                            whiteKingPos.set(chessBoard.findKing("white"));
-                                            blackKingPos.set(chessBoard.findKing("black"));
-                                            whiteKing.set((WhiteKing) chessBoard.getPiece(whiteKingPos.get()));
-                                            blackKing.set((BlackKing) chessBoard.getPiece(blackKingPos.get()));
-                                            if (whiteKing.get().isChecked(chessBoard)) {
-                                                changeBorderColor(checkColor, whiteKingPos.get());
-                                            } else {
-                                                changeBorderColor(null, whiteKingPos.get());
-                                            }
-                                            if (blackKing.get().isChecked(chessBoard)) {
-                                                changeBorderColor(checkColor, blackKingPos.get());
-                                            } else {
-                                                changeBorderColor(null, blackKingPos.get());
-                                            }
-                                        } catch (FileNotFoundException e) {
-                                            e.printStackTrace();
-                                        }
-                                    });
-                                }).start();
-                            }
-
-
                         }
                     } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
                     }
                     selectedSquare = null;
                     try {
-                        if (whiteKing.get().isChecked(chessBoard)) {
-                            changeBorderColor(checkColor, whiteKingPos.get());
+                        if (whiteKing.isChecked(chessBoard)) {
+                            changeBorderColor(checkColor, whiteKingPos);
                         } else {
-                            changeBorderColor(null, whiteKingPos.get());
+                            changeBorderColor(null, whiteKingPos);
                         }
                     } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
                     }
                     try {
-                        if (blackKing.get().isChecked(chessBoard)) {
-                            changeBorderColor(checkColor, blackKingPos.get());
+                        if (blackKing.isChecked(chessBoard)) {
+                            changeBorderColor(checkColor, blackKingPos);
                         } else {
-                            changeBorderColor(null, blackKingPos.get());
+                            changeBorderColor(null, blackKingPos);
                         }
                     } catch (FileNotFoundException e) {
                         throw new RuntimeException(e);
@@ -798,11 +681,6 @@ public class ChessController {
                 }
                 if (whitePlays) {
                     if (selectedPiece != null && !selectedPiece.getColor().equals("black")) {
-                        if(!pvpMode){
-                            if(aiColor.equals("white")){
-                                return;
-                            }
-                        }
                         selectedSquare = pair;
                         changeBorderColor(selectionColor, selectedSquare);
                         try {
@@ -826,11 +704,6 @@ public class ChessController {
 
                 } else {
                     if (selectedPiece != null && !selectedPiece.getColor().equals("white")) {
-                        if(!pvpMode){
-                            if(aiColor.equals("black")){
-                                return;
-                            }
-                        }
                         selectedSquare = pair;
                         changeBorderColor(selectionColor, selectedSquare);
                         try {
@@ -879,7 +752,7 @@ public class ChessController {
             }
             try {
                 initialize();
-            } catch (IOException e) {
+            } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
             }
         });
