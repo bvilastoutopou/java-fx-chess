@@ -98,13 +98,13 @@ public class ChessController {
     Rectangle blackTimeBox;
     @FXML
     Rectangle whiteTimeBox;
-    private String whiteWinsSound = getClass().getResource("/com/example/chess/sounds/whiteWins.mp3").toExternalForm();
+    private String whiteWinsSound = getClass().getResource("/com/example/chess/sounds/whiteWins.wav").toExternalForm();
 
-    private String blackWinsSound = getClass().getResource("/com/example/chess/sounds/blackWins.mp3").toExternalForm();
+    private String blackWinsSound = getClass().getResource("/com/example/chess/sounds/blackWins.wav").toExternalForm();
 
-    private String drawSound = getClass().getResource("/com/example/chess/sounds/draw.mp3").toExternalForm();
+    private String drawSound = getClass().getResource("/com/example/chess/sounds/draw.wav").toExternalForm();
 
-    private String checkSound = getClass().getResource("/com/example/chess/sounds/check.mp3").toExternalForm();
+    private String checkSound = getClass().getResource("/com/example/chess/sounds/check.wav").toExternalForm();
 
 
 

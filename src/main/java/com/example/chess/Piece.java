@@ -23,8 +23,8 @@ abstract public class Piece {
     protected FileInputStream inputStream;
     protected Image img;
     protected ImageView imageView;
-    protected String moveSound = getClass().getResource("/com/example/chess/sounds/move.mp3").toExternalForm();
-    protected String captureSound = getClass().getResource("/com/example/chess/sounds/capture.mp3").toExternalForm();
+    protected String moveSound = getClass().getResource("/com/example/chess/sounds/move.wav").toExternalForm();
+    protected String captureSound = getClass().getResource("/com/example/chess/sounds/capture.wav").toExternalForm();
     public Piece(SquarePair pos) {
         this.pos = pos;
         movesDone = 0;
